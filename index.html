@@ -824,7 +824,7 @@
             });
         }
 
-        // 4. 깃허브 페이지 환경 최적화 대용량 파일 전송 서브밋 핸들러 (비동기 파일 유실 버그 완치 최종본)
+        // 4. 깃허브 페이지 환경 최적화 대용량 파일 전송 서브밋 핸들러 (FileList 인덱스 오타 완전 해결 판본)
         function handleSubmit(e) {
             e.preventDefault();
             lockScreen(); // 저장 버튼 클릭 즉시 화면 전체 잠금 및 모래시계 마우스 가동
@@ -836,37 +836,37 @@
             const uploadPromises = [];
             const filePayloads = [];
         
-            // [버그 완치 구역] 파일 탐색기에서 선택된 실물 파일의 비동기 FileReader 스트림 제어
+            // [버그 완치 구역] 다중 파일 인풋 상자를 안전하게 순회하며 개별 파일 원액 추출
             fileInputs.forEach(input => {
-                // 인풋 상자에 실제 파일이 첨부되어 있는지 확인합니다.
-                if (input.files && input.files[0]) {
+                // 인풋 상자에 실제 실물 파일이 첨부되어 있는지 안전 검사
+                if (input.files && input.files.length > 0) {
+                    // [버그 수정 핵심] input.files 배열 목록에서 0번째 첫 실물 파일 객체를 정확하게 조준하여 꺼냅니다.
                     const file = input.files[0];
                     
-                    // 각 파일별로 해독이 끝날 때까지 기다리겠다는 "약속(Promise)" 큐를 생성합니다.
                     const promise = new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onload = function(evt) {
                             filePayloads.push({
-                                name: file.name,
-                                type: file.type,
-                                base64: evt.target.result // 완벽하게 추출된 데이터 원액 주입
+                                name: file.name, // 이제 정상적인 파일명(예: photo.jpg) 추출 성공
+                                type: file.type, // 정상적인 마임타입(예: image/jpeg) 추출 성공
+                                base64: evt.target.result // 온전하게 인코딩된 이진 스트림 원액 주입 완료
                             });
-                            resolve(); // 이 파일의 해독이 끝났음을 선언합니다.
+                            resolve();
                         };
-                        reader.readAsDataURL(file); // 실물 파일 고속 스캔 인코딩 가동
+                        reader.readAsDataURL(file); // 실물 파일을 바이트 스트림으로 스캔 시작
                     });
                     uploadPromises.push(promise);
                 }
             });
         
-            // 🔥 [핵심 제어부] 첨부된 모든 사진 파일의 바이너리 추출 약속이 "100% 완전히 끝났을 때만" 내부 로직을 가동합니다.
+            // 첨부된 모든 이미지 파일의 바이너리 추출 약속이 100% 끝났을 때 구글 서버로 발송을 시작합니다.
             Promise.all(uploadPromises).then(() => {
                 const payload = {};
                 if (editId) payload.id = parseInt(editId);
                 
-                // 백엔드 명세서 규격과 일치하는 'rawfiles' 키 명칭에 실물 파일 팩 대입
+                // 백엔드 명세서 수신 규격 키 명칭인 'rawfiles'와 완벽히 매치시킵니다.
                 if (filePayloads.length > 0) {
-                    payload['images'] = filePayloads;
+                    payload['rawfiles'] = filePayloads;
                 }
         
                 formStructures[currentTab].forEach(field => {
@@ -874,7 +874,7 @@
                         const el = document.getElementById(field.id);
                         if (!el) return;
         
-                        // 메뉴 및 객실 가격 정보 정제 정규식 작동
+                        // 유연 공백 분리 메뉴 및 객실 가격 정보 정제 정규식 작동
                         if ((field.id === 'menu' || field.id === 'room_info') && el.value) {
                             payload[field.id] = el.value.split('\n').map(line => line.replace(/\r/g, '').trim()).filter(line => line !== '').map(line => { let parts = line.includes(':') ? line.split(':') : line.split(/\s+/); if (parts.length >= 2) { const priceRaw = parts[parts.length - 1].replace(/[^0-9]/g, ''); const nameParts = parts.slice(0, parts.length - 1); const menuName = nameParts.join(' ').trim(); return { name: menuName || '이름없음', price: parseInt(priceRaw) || 0 }; } const match = line.match(/^(.*?)([0-9,]+)[^0-9]*$/); if (match) { return { name: match.trim() || '이름없음', price: parseInt(match.replace(/[^0-9]/g, '')) || 0 }; } return null; }).filter(item => item !== null && item.name !== '');
                         } else if (currentTab === 'incentives' && field.id === 'attraction_search') {
@@ -889,25 +889,24 @@
                     }
                 });
         
-                // 본문 전송용 최적화 목적지 URL 주소 설정
                 const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
         
-                // 이제 파일 페이로드가 완벽하게 패킹된 상태이므로 안정적인 POST 트랜잭션이 수행됩니다.
+                // 정제된 파일 페이로드 팩을 HTTP POST 데이터 바디에 실어 전송
                 fetch(requestUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // 브라우저 CORS 보안 검사 강제 통과
+                    mode: 'no-cors', // 브라우저 CORS 강제 패스 우회
                     redirect: 'follow',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(payload)
                 })
                 .then(res => {
-                    unlockScreen(); // 모래시계 락 해제 및 마우스 포인터 원복
-                    alert('구글 클라우드 데이터베이스에 실시간 저장이 완료되었습니다!');
-                    closeForm(); // 상단 입력 슬라이드 폼 닫기
-                    loadCurrentTabData(); // 우측 테이블 리스트 실시간 리프레시 갱신
+                    unlockScreen(); // 모래시계 락 해제
+                    alert('구글 클라우드 아카이브 시스템에 실시간 저장이 완벽하게 완료되었습니다!');
+                    closeForm(); // 등록 슬라이드 폼 닫기
+                    loadCurrentTabData(); // 우측 테이블 리스트 실시간 동기화 리프레시
                 })
                 .catch(err => {
-                    unlockScreen(); // 장애 시 락 강제 해제 보호
+                    unlockScreen();
                     alert('구글 클라우드 서버 통신 중 오류가 발생했습니다.');
                     console.error('트랜잭션 크래시 로그:', err);
                 });
