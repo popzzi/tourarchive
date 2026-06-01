@@ -908,7 +908,7 @@
                         payload[field.id] = el.value;
                     }
                 });
-        
+                console.log(payload, "**");
                 const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
         
                 fetch(requestUrl, {
