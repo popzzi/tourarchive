@@ -824,7 +824,7 @@
             });
         }
 
-        // 4. 깃허브 페이지(HTTPS) 최적화 대용량 파일 전송 서브밋 핸들러 (CORS Failed to fetch 완치본)
+        // 4. 깃허브 페이지 환경 최적화 대용량 파일 전송 서브밋 핸들러 (rawfiles 키 명칭 완전 일치 최종본)
         function handleSubmit(e) {
             e.preventDefault();
             lockScreen(); // 저장 버튼 클릭 즉시 화면 전체 잠금 및 모래시계 마우스 가동
@@ -860,14 +860,18 @@
             Promise.all(uploadPromises).then(() => {
                 const payload = {};
                 if (editId) payload.id = parseInt(editId);
-                if (filePayloads.length > 0) payload['raw_files'] = filePayloads;
+                
+                // [버그 수정 핵심] 오타가 있던 raw_files 대신, 백엔드 사양과 100% 호환되는 rawfiles 명칭으로 데이터를 패킹합니다.
+                if (filePayloads.length > 0) {
+                    payload['rawfiles'] = filePayloads;
+                }
         
                 formStructures[currentTab].forEach(field => {
                     if (field.type !== 'file_upload') {
                         const el = document.getElementById(field.id);
                         if (!el) return;
         
-                        // 유연 공백 분리 메뉴 및 객실 가격 정보 정제 정규식 작동
+                        // 메뉴 및 객실 가격 정보 정제 정규식 작동
                         if ((field.id === 'menu' || field.id === 'room_info') && el.value) {
                             payload[field.id] = el.value.split('\n').map(line => line.replace(/\r/g, '').trim()).filter(line => line !== '').map(line => { let parts = line.includes(':') ? line.split(':') : line.split(/\s+/); if (parts.length >= 2) { const priceRaw = parts[parts.length - 1].replace(/[^0-9]/g, ''); const nameParts = parts.slice(0, parts.length - 1); const menuName = nameParts.join(' ').trim(); return { name: menuName || '이름없음', price: parseInt(priceRaw) || 0 }; } const match = line.match(/^(.*?)([0-9,]+)[^0-9]*$/); if (match) { return { name: match.trim() || '이름없음', price: parseInt(match.replace(/[^0-9]/g, '')) || 0 }; } return null; }).filter(item => item !== null && item.name !== '');
                         } else if (currentTab === 'incentives' && field.id === 'attraction_search') {
@@ -882,36 +886,29 @@
                     }
                 });
         
-                // 본문 전송용 최적화 목적지 URL 주소 설정
                 const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
         
-                // [CORS 완치 핵심] mode: 'no-cors'를 적용하여 브라우저의 무조건적인 차단 행위를 원천 무력화합니다.
                 fetch(requestUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // 브라우저의 엄격한 CORS 보안 검사 단계를 강제로 패스시킵니다.
-                    redirect: 'follow', // 구글의 리다이렉션을 추적하도록 명시
+                    mode: 'no-cors', // CORS 차단 우회
+                    redirect: 'follow',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(payload)
                 })
                 .then(res => {
-                    // mode: 'no-cors' 환경에서는 보안상 응답 본문을 읽을 수 없으므로(opaque 상태),
-                    // 구글 서버에 데이터가 무사히 전달되어 네트워크 세션이 끊기지 않았다면 저장이 완료된 것으로 안전 판정합니다.
-                    unlockScreen(); // 모래시계 락 해제 및 마우스 원복
-                    
+                    unlockScreen(); // 모래시계 락 해제
                     alert('구글 클라우드 데이터베이스에 실시간 저장이 완료되었습니다!');
-                    closeForm(); // 상단 입력 슬라이드 폼 닫기
-                    
-                    // 데이터 조회의 경우 앞서 구축한 JSONP 전용 엔진이 돌아가므로 
-                    // 꼬임 없이 구글 시트에서 갓 입력한 최신 데이터를 바로 리스트에 반영해 옵니다.
+                    closeForm();
                     loadCurrentTabData(); 
                 })
                 .catch(err => {
-                    unlockScreen(); // 장애 시 락 강제 해제 보호
+                    unlockScreen();
                     alert('구글 클라우드 서버 통신 중 오류가 발생했습니다.');
-                    console.error('제출 전송 트랜잭션 장애 상세 로그:', err);
+                    console.error(err);
                 });
             });
         }
+
 
 
         // 6-3. 단일 데이터 행을 구글 시트에서 실시간으로 영구 삭제 처리하는 함수 (완전한 JSONP 우회형)
