@@ -893,6 +893,7 @@
                 fetch(requestUrl, {
                     method: 'POST',
                     mode: 'cors',
+                    redirect: 'follow',
                     headers: { 'Content-Type': 'text/plain' }, // 구글 Apps Script 수신 표준 규격 일치
                     body: JSON.stringify(payload)
                 })
@@ -967,7 +968,7 @@
             const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
 
             // [2] 웹 표준 fetch(GET) 통신 시작
-            fetch(requestUrl, { method: 'GET', mode: 'cors' })
+            fetch(requestUrl, { method: 'GET', mode: 'cors', redirect: 'follow' })
             .then(res => res.json())
             .then(serverData => {
                 unlockScreen(); // [3] 데이터 도착 즉시 잠금 해제
