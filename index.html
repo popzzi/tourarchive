@@ -916,8 +916,8 @@
                 fetch(requestUrl, {
                     method: 'POST',
                     mode: 'cors',         
-                    redirect: 'follow',     
-                    headers: { 'Content-Type': 'text/plain' }, 
+                    // redirect: 'follow',     
+                    // headers: { 'Content-Type': 'text/plain' }, 
                     body: encodeURIComponent(JSON.stringify(payload)) 
                 })
                 .then(res => {
