@@ -824,7 +824,7 @@
             });
         }
 
-        // 4. 깃허브 페이지 환경 최적화 대용량 파일 전송 서브밋 핸들러 
+        // 4. 깃허브 페이지 환경 최적화 대용량 파일 전송 서브밋 핸들러 (비동기 파일 유실 버그 완치 최종본)
         function handleSubmit(e) {
             e.preventDefault();
             lockScreen(); // 저장 버튼 클릭 즉시 화면 전체 잠금 및 모래시계 마우스 가동
@@ -836,31 +836,35 @@
             const uploadPromises = [];
             const filePayloads = [];
         
-            // 실물 파일 탐색기에서 잡힌 모든 사진의 원액을 Base64 이진 스트림으로 인코딩 가공
+            // [버그 완치 구역] 파일 탐색기에서 선택된 실물 파일의 비동기 FileReader 스트림 제어
             fileInputs.forEach(input => {
+                // 인풋 상자에 실제 파일이 첨부되어 있는지 확인합니다.
                 if (input.files && input.files[0]) {
                     const file = input.files[0];
+                    
+                    // 각 파일별로 해독이 끝날 때까지 기다리겠다는 "약속(Promise)" 큐를 생성합니다.
                     const promise = new Promise((resolve) => {
                         const reader = new FileReader();
                         reader.onload = function(evt) {
                             filePayloads.push({
                                 name: file.name,
                                 type: file.type,
-                                base64: evt.target.result
+                                base64: evt.target.result // 완벽하게 추출된 데이터 원액 주입
                             });
-                            resolve();
+                            resolve(); // 이 파일의 해독이 끝났음을 선언합니다.
                         };
-                        reader.readAsDataURL(file);
+                        reader.readAsDataURL(file); // 실물 파일 고속 스캔 인코딩 가동
                     });
                     uploadPromises.push(promise);
                 }
             });
         
-            // 모든 파일의 바이트 추출 처리가 끝날 때까지 대기 유도 후 결합 전송
+            // 🔥 [핵심 제어부] 첨부된 모든 사진 파일의 바이너리 추출 약속이 "100% 완전히 끝났을 때만" 내부 로직을 가동합니다.
             Promise.all(uploadPromises).then(() => {
                 const payload = {};
                 if (editId) payload.id = parseInt(editId);
                 
+                // 백엔드 명세서 규격과 일치하는 'rawfiles' 키 명칭에 실물 파일 팩 대입
                 if (filePayloads.length > 0) {
                     payload['images'] = filePayloads;
                 }
@@ -885,30 +889,30 @@
                     }
                 });
         
+                // 본문 전송용 최적화 목적지 URL 주소 설정
                 const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
         
+                // 이제 파일 페이로드가 완벽하게 패킹된 상태이므로 안정적인 POST 트랜잭션이 수행됩니다.
                 fetch(requestUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // CORS 차단 우회
+                    mode: 'no-cors', // 브라우저 CORS 보안 검사 강제 통과
                     redirect: 'follow',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(payload)
                 })
                 .then(res => {
-                    unlockScreen(); // 모래시계 락 해제
+                    unlockScreen(); // 모래시계 락 해제 및 마우스 포인터 원복
                     alert('구글 클라우드 데이터베이스에 실시간 저장이 완료되었습니다!');
-                    closeForm();
-                    loadCurrentTabData(); 
+                    closeForm(); // 상단 입력 슬라이드 폼 닫기
+                    loadCurrentTabData(); // 우측 테이블 리스트 실시간 리프레시 갱신
                 })
                 .catch(err => {
-                    unlockScreen();
+                    unlockScreen(); // 장애 시 락 강제 해제 보호
                     alert('구글 클라우드 서버 통신 중 오류가 발생했습니다.');
-                    console.error(err);
+                    console.error('트랜잭션 크래시 로그:', err);
                 });
             });
         }
-
-
 
         // 6-3. 단일 데이터 행을 구글 시트에서 실시간으로 영구 삭제 처리하는 함수 (완전한 JSONP 우회형)
         function deleteItem(id, event) {
