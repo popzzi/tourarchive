@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관광 라이브러리 통합 허브 (오프라인 로컬 데모)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            line-height: 1.5;
+        }
+
+        .max-w-7xl {
+            max-width: 1280px;
+            margin: 0 auto;
+            height: 100%;
+            overflow: hidden;
+        }
+        .content-container {
+            height: calc(100vh - 175px);
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            margin: 30px 0;
+        }
+        header div {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: space-between;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #4f46e5;
+        }
+
+        /* .subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+            font-weight: normal;
+        } */
+
+        /* .badge {
+            background-color: #f0fdf4;
+            color: #166534;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            background: #f0fdf4;
+            border: 1px solid #dcfce7;
+        } */
+
+        /* 탭 스타일 */
+        nav {
+            display: flex;
+            gap: 8px;
+            background: rgba(226, 232, 240, 0.6);
+            padding: 6px;
+            border-radius: 12px;
+            width: 400px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 0;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+            background: transparent;
+        }
+
+        .tab-btn.active {
+            font-weight: 700;
+            background: white;
+            color: #4f46e5;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 레이아웃 구조 모바일 최적화 업그레이드 */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            /* 모바일에서는 기본 1열 */
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* PC 및 태블릿 큰 화면(1024px 이상)에서만 좌우 분할 */
+        @media (min-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr 1.8fr;
+                /* 좌: 폼(좁게), 우: 목록(넓게) */
+                gap: 32px;
+            }
+
+            .sticky {
+                position: -webkit-sticky;
+                position: sticky;
+                top: 24px;
+            }
+        }
+
+        /* 카드 스타일 공통 */
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+            height: 100%;
+        }
+
+        .sticky {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 24px;
+        }
+
+        .card-title-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* 버튼 스타일 */
+        .btn-refresh {
+            font-size: 12px;
+            color: #4f46e5;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .btn-clear {
+            font-size: 12px;
+            color: #e11d48;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: #4f46e5;
+            color: white;
+            font-weight: 700;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 24px;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #4338ca;
+        }
+
+        /* 입력 폼 필드 스타일 */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 14px;
+            transition: border 0.2s;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #4f46e5;
+        }
+
+        #tableSearchInput {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 13px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        /* 테이블 스타일 */
+        /* 모바일 화면에서 테이블이 쪼그라들지 않도록 스크롤바 강제 지정 */
+        .table-container {
+            overflow: auto hidden;
+            border: 1px solid #f1f5f9;
+            background: white;
+            -webkit-overflow-scrolling: touch;
+            /* iOS 부드러운 스크롤 */
+            height: calc(100% - 110px);
+            display: block;
+            border-left: 0;
+            border-right: 0;
+        }
+        /* 스크롤바의 폭 너비 */
+        .table-container::-webkit-scrollbar, #formSection::-webkit-scrollbar, table::-webkit-scrollbar {
+            width: 5px;  
+            height: 5px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #4438cace; /* 스크롤바 색상 */
+            border-radius: 20px; /* 스크롤바 둥근 테두리 */
+        }
+
+        #formSection::-webkit-scrollbar-thumb, table::-webkit-scrollbar-thumb {
+            background: #4438cace; /* 스크롤바 색상 */
+            border-radius: 20px; /* 스크롤바 둥근 테두리 */
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .table-container::-webkit-scrollbar-track, #formSection::-webkit-scrollbar-track, table::-webkit-scrollbar-track {
+            background: #4e46e506;  /*스크롤바 뒷 배경 색상*/
+        }
+
+        table {
+            width: 100%;
+            min-width: 900px;
+            /* 모바일 환경 찌그러짐 방지 최소 너비 */
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+            table-layout: fixed;
+            height: 100%;
+            overflow-y: auto;
+            display: block;
+            /* 지정한 너비 비율이 정확히 유지되도록 강제 설정 */
+        }
+        thead {
+            position: sticky;
+            top: 0;
+        }
+        tbody {
+            overflow: auto;
+            height: calc(100% - 42px);
+        }
+
+        th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            border-bottom: 1px solid #f1f5f9;
+            text-transform: uppercase;
+        }
+
+        td {
+            color: #475569;
+            border-bottom: 1px solid #e2e8f0;
+            max-width: 100%;
+            vertical-align: middle;
+        }
+        th, td {
+            padding: 10px;
+        }
+
+        tr:hover td {
+            background-color: #cde2f8;
+        }
+
+        .td-id {
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .td-bold {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .td-trunc {
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 12px;
+        }
+
+        .td-fee {
+            color: #4f46e5;
+            font-weight: 600;
+        }
+
+        .td-closed {
+            color: #f43f5e;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .detail_contents { 
+            display:grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap:12px; 
+            font-size:13px; 
+            color:#475569; 
+            margin-bottom:15px; 
+            word-break:break-all;
+        }
+        .detail_contents > :nth-last-child(-n+2) {
+            grid-column: span 2; /* 또는 1 / -1 (한 행을 통째로 차지하게 만듦) */
+        }
+
+        .tag-badge {
+            font-size: 12px;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            max-width: 130px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .empty-state {
+            padding: 32px;
+            text-align: center;
+            color: #94a3b8;
+        }
+        #formSection {
+            display: none; 
+            z-index: 10;
+            margin-bottom: 24px; 
+            border-left: 4px solid #4f46e5;
+            overflow: auto;
+            width: 600px;
+            position: absolute;
+            background: white;
+            height: 80%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid rgba(0, 0, 0, 0.04); /* 아주 연한 테두리로 선명함 추가 */
+        }
+        #popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5); /* 어두운 배경색 */
+            pointer-events: auto; 
+            z-index: 9; 
+        }
+        .popup-title-wrap {
+            display: flex; gap: 12px; align-items: stretch;
+        }
+        .card-title-wrap {
+            display: flex; gap: 12px; align-items: stretch; flex-direction: column;
+        }
+        .card-title-wrap > div:nth-child(1) {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .copyright-text {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            letter-spacing: 0.5px;
+            text-align: left;
+            position: fixed;
+            left: 0;
+            top: 44px;
+            background: #607D8B;
+            color: white;
+            padding: 6px 0;
+            border-radius: 0 8px 8px 0;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 767px){
+            header div, .card-title-wrap > div:nth-child(1) {
+                flex-direction: column;
+            }
+            #formSection {
+                width: 100%;
+            }
+            
+        }
+    </style>
+</head>
+
+<body>
+    <div class="max-w-7xl">
+        <!-- 상단 대시보드 헤더 -->
+        <header>
+            <div>
+                <h1>관광 데이터 수집 아카이브</h1>
+                 <!-- 네비게이션 탭 버튼 -->
+                <nav>
+                    <button onclick="switchTab('restaurants')" id="tab-restaurants" class="tab-btn active">식당</button>
+                    <button onclick="switchTab('attractions')" id="tab-attractions" class="tab-btn">관광지</button>
+                    <button onclick="switchTab('accommodations')" id="tab-accommodations" class="tab-btn">숙박</button>
+                    <button onclick="switchTab('incentives')" id="tab-incentives" class="tab-btn">인센티브</button>
+                </nav>
+            </div>
+            <div class="copyright-text">
+            © Hzzin
+            </div>
+        </header>
+
+        <!-- 메인 콘텐츠 레이아웃 (상단: 슬라이드 입력 폼, 하단: 데이터 목록) -->
+        <div class="content-container">
+
+            <!-- [상단] 숨겨져 있다가 열리는 입력 폼 섹션 (기본 display: none) -->
+            <div id="popup-overlay"></div>
+            <div id="formSection" class="card">
+                <div class="popup-title-wrap"
+                    style="display: flex; justify-content: space-between; align-items: center; border: none; margin-bottom: 10px; padding: 0;">
+                    <h2 id="form-title" class="card-title">식당 신규 정보 등록</h2>
+                    <button onclick="closeForm()"
+                        style="background: none; border: none; font-size: 14px; color: #94a3b8; cursor: pointer; font-weight: bold;">✕
+                        닫기</button>
+                </div>
+
+                <form id="dataForm" onsubmit="handleSubmit(event)">
+                    <div id="dynamicFields"></div>
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                        <button type="button" onclick="closeForm()"
+                            style="background: #f1f5f9; color: #64748b; font-weight: 700; padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-size: 14px;">취소</button>
+                        <button type="submit" class="btn-submit"
+                            style="margin-top: 0; width: auto; padding: 12px 32px;">저장</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- [하단] 항상 노출되는 데이터 테이블 조회 섹션 -->
+            <div class="card" style="min-height: 500px;">
+                <div class="card-title-wrap">
+                    <div>
+                        <h2 id="table-title" class="card-title">식당 리스트</h2>
+
+                        <div style="display: flex; gap: 16px; align-items: center;">
+                            <!-- 신규 입력 폼을 호출하는 + 등록 버튼 -->
+                            <button onclick="openForm()"
+                                style="background: #4f46e5; color: white; font-weight: 700; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">
+                                + 신규
+                            </button>
+                            <button onclick="exportToCSV()"
+                                style="font-size: 12px; color: #16a34a; font-weight: 600; background: none; border: none; cursor: pointer; text-decoration: underline;">
+                                엑셀(CSV) 다운로드
+                            </button>
+                            <button onclick="clearCurrentData()" class="btn-clear">현재 탭 데이터 초기화</button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <!-- 키 입력 이벤트(oninput)를 전면 제거하여 자동 요청을 차단합니다 -->
+                        <input type="text" id="tableSearchInput" placeholder="검색어를 입력하세요 (명칭, 주소, 태그, 부처 등 전체 검색)">
+                        
+                        <!-- 클릭 시에만 실물 조회를 실행하는 수동 검색 버튼 -->
+                        <button onclick="loadCurrentTabData()" style="background: #4f46e5; color: white; font-weight: 700; padding: 0 24px; border: none; border-radius: 10px; font-size: 13px; cursor: pointer; white-space: nowrap;">
+                            검색
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 프론트엔드 소스코드 맨 위에 선언할 로그인 세션 캐싱 로직
+        let USER_PASSWORD = sessionStorage.getItem('archive_auth_key') || '';
+
+        if (!USER_PASSWORD) {
+            USER_PASSWORD = prompt('관광 라이브러리 아카이브 시스템 암호를 입력하세요:');
+            if (USER_PASSWORD) {
+                sessionStorage.setItem('archive_auth_key', USER_PASSWORD);
+            } else {
+                alert('인증 암호 누락으로 클라우드 동기화가 제한됩니다. 화면을 새로고침하십시오.');
+            }
+        }
+        let GAS_API_URL = 'https://script.google.com/macros/s/AKfycbx31douJXOIuDUsLCVdVTcAPfPBodCqgJgW3noxuJ_RlMNM6-qv1o37hepT84Zz8Z6R/exec';
+        let currentTab = 'restaurants';
+        // 구글 스프레드시트에서 가져온 데이터를 로컬스토리지 대신 보관할 전역 메모리 캐시 변수
+        let CURRENT_SHEET_DATA = [];
+
+
+        // 1. 각 탭별 폼 필드 구성 정의
+        const formStructures = {
+            restaurants: [
+                { id: 'name', label: '식당명 *', type: 'text', req: true, placeholder: '예: 대박 한정식' },
+                { id: 'address', label: '주소 *', type: 'text', req: true, placeholder: '예: 서울시 종로구 대학로 12' },
+                { id: 'phone', label: '연락처', type: 'text', req: false, placeholder: '예: 02-123-4567' },
+                { id: 'menu', label: '메뉴 및 가격 입력 (엔터로 한 줄씩, 숫자 천단위 쉼표 제외)', type: 'textarea', req: false, placeholder: '예:\n비빔밥:10000' },
+                { id: 'min_price', label: '최저 금액 (원화, 숫자만)', type: 'number', req: false, placeholder: '9000' },
+                { id: 'max_price', label: '최고 금액 (원화, 숫자만)', type: 'number', req: false, placeholder: '15000' },
+                { id: 'dietary_options', label: '특이 식단 태그 설명', type: 'text', req: false, placeholder: '예: 비건 코스 가능, 할랄 인증' },
+                { id: 'tags', label: '카테고리 태그 (쉼표로 구분)', type: 'text', req: false, placeholder: '예: 한식, 가족모임, 가성비' },
+                { id: 'images', label: '사진 URL 등록', type: 'image_list', req: false, placeholder: '이미지 주소 링크를 입력하세요.' },
+                { id: 'review_summary', label: '사후 평가 및 리뷰 요약', type: 'textarea', req: false, placeholder: '예: 방문자 만족도 상, 주차가 다소 협소함' }
+            ],
+            attractions: [
+                { id: 'name', label: '관광지명 *', type: 'text', req: true, placeholder: '예: 하늘공원 수목원' },
+                { id: 'address', label: '주소 *', type: 'text', req: true, placeholder: '예: 강원도 강릉시 해안로 30' },
+                { id: 'phone', label: '연락처', type: 'text', req: false, placeholder: '예: 033-987-6543' },
+                { id: 'entrance_fee', label: '대표 입장/체험료 (성인 기준 숫자만)', type: 'number', req: false, placeholder: '5000' },
+                { id: 'fee_details', label: '요금 상세 설명', type: 'textarea', req: false, placeholder: '예: 성인 5000원, 청소년 3000원, 65세 이상 무료' },
+                { id: 'closed_days', label: '정기 휴무일', type: 'text', req: false, placeholder: '예: 매주 월요일, 설날 당일 휴무' },
+                { id: 'tags', label: '관광 태그 (쉼표로 구분)', type: 'text', req: false, placeholder: '예: 힐링, 자연, 포토존, 아이와함께' },
+                { id: 'images', label: '사진 URL 등록', type: 'image_list', req: false, placeholder: '이미지 주소 링크를 입력하세요.' }
+            ],
+            accommodations: [
+                { id: 'name', label: '숙박시설명 *', type: 'text', req: true, placeholder: '예: 경포 해변 리조트' },
+                { id: 'address', label: '주소 *', type: 'text', req: true, placeholder: '예: 강원도 강릉시 해안로 50' },
+                { id: 'phone', label: '연락처', type: 'text', req: false, placeholder: '예: 033-555-6666' },
+                { id: 'room_info', label: '객실 타입 및 요금 정보 (엔터로 한 줄씩 구분, 숫자 천단위 쉼표 제외)', type: 'textarea', req: false, placeholder: '예: 디럭스룸(2인1실): 120000' },
+                { id: 'min_price', label: '주중 최저 요금 (숫자만)', type: 'number', req: false, placeholder: '80000' },
+                { id: 'max_price', label: '주말 최고 요금 (숫자만)', type: 'number', req: false, placeholder: '250000' },
+                { id: 'tags', label: '숙박 태그 카테고리 (쉼표로 구분)', type: 'text', req: false, placeholder: '예: 호텔, 오션뷰, 수영장, 가족여행' },
+                { id: 'images', label: '사진 URL 등록', type: 'image_list', req: false, placeholder: '이미지 주소 링크를 입력하세요.' },
+                { id: 'review_summary', label: '시설 상태 및 사후 평가 요약', type: 'textarea', req: false, placeholder: '예: 리모델링으로 깨끗함, 조식 만족도 높음' }
+            ],
+            incentives: [
+                { id: 'region_name', label: '지급 대상 지역명 *', type: 'text', req: true, placeholder: '예: 강원도 강릉시' },
+                { id: 'attraction_search', label: '연계 관광지 검색 및 선택 (미리 등록된 관광지명 입력)', type: 'text', req: false, placeholder: '관광지명을 입력하면 자동 검색됩니다.' },
+                { id: 'conditions', label: '인센티브 지급 기준 조건 *', type: 'textarea', req: true, placeholder: '예: 외국인 단체 관광객 10명 이상 유치 및 지정 관광지 2곳 방문' },
+                { id: 'calc_formula', label: '예상 금액 산출 방식', type: 'textarea', req: false, placeholder: '예: 숙박당 인당 15,000원 지원 (최대 100만원)' },
+                { id: 'manager_name', label: '담당 주무관 이름', type: 'text', req: false, placeholder: '예: 홍길동' },
+                { id: 'manager_phone', label: '담당부서 연락처', type: 'text', req: false, placeholder: '예: 033-111-2222' },
+                { id: 'manager_email', label: '담당자 공공 이메일', type: 'text', req: false, placeholder: '예: gildong@korea.kr' },
+                { id: 'department', label: '지급 소관 부처 / 부서명', type: 'text', req: false, placeholder: '예: 강릉시청 문화관광과' },
+                { id: 'address', label: '서류 서면 접수 주소', type: 'text', req: false, placeholder: '예: 강릉시 강릉대로 33' }
+            ]
+        };
+
+        // 2. 탭 제어 전환 함수
+        function switchTab(tab) {
+            currentTab = tab;
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('tab-' + tab).classList.add('active');
+
+            const titles = {
+                restaurants: '식당',
+                attractions: '관광지',
+                accommodations: '숙박',
+                incentives: '인센티브'
+            };
+            document.getElementById('form-title').innerText = titles[tab] + ' 신규';
+            document.getElementById('table-title').innerText = titles[tab] + 'DB';
+
+            const searchInput = document.getElementById('tableSearchInput');
+            if (searchInput) searchInput.value = '';
+
+            // 탭을 바꿀 때 열려있던 입력 폼을 안전하게 닫아줍니다.
+            closeForm();
+            renderFormFields();
+            loadCurrentTabData();
+        }
+
+        // 3. 입력 폼 컴포넌트 렌더러 (하단 고정 예시 문구 추가 버전)
+        function renderFormFields() {
+            const container = document.getElementById('dynamicFields');
+            container.innerHTML = '';
+            
+            if (!formStructures[currentTab]) return;
+
+            formStructures[currentTab].forEach(field => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'form-group';
+                wrapper.style.marginBottom = '18px';
+                wrapper.style.position = 'relative';
+                
+                const label = document.createElement('label');
+                label.innerText = field.label;
+                wrapper.appendChild(label);
+
+                // 이미지 다중 제어 전용 UI 빌드 분기
+                if (field.type === 'image_list') {
+                    // 여러 입력 상자들을 담을 수직 컨테이너 박스 생성
+                    const listContainer = document.createElement('div');
+                    listContainer.id = 'image-input-list-container';
+                    listContainer.style.cssText = 'display:flex; flex-direction:column; gap:8px; margin-top:4px;';
+                    wrapper.appendChild(listContainer);
+
+                    // 단일 입력 행을 화면에 추가하는 내부 팩토리 함수
+                    function addImageInputField(initialValue = '') {
+                        const itemRow = document.createElement('div');
+                        itemRow.className = 'image-input-row';
+                        itemRow.style.cssText = 'display:flex; gap:8px; align-items:center;';
+
+                        const inputEl = document.createElement('input');
+                        inputEl.type = 'text';
+                        inputEl.value = initialValue;
+                        //inputEl.placeholder = field.placeholder;
+                        inputEl.className = 'image-url-item-input';
+                        inputEl.style.cssText = 'width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; font-size:14px; outline:none; font-family:inherit;';
+                        inputEl.addEventListener('focus', function() { this.style.borderColor = '#4f46e5'; });
+                        inputEl.addEventListener('blur', function() { this.style.borderColor = '#e2e8f0'; });
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.innerText = '삭제';
+                        removeBtn.style.cssText = 'background:#ffe4e6; color:#b91c1c; border:none; padding:10px 14px; border-radius:12px; font-size:13px; font-weight:bold; cursor:pointer; white-space:nowrap;';
+                        removeBtn.addEventListener('click', function() {
+                            // 입력창이 최소 1개는 유지되도록 처리
+                            if (listContainer.querySelectorAll('.image-input-row').length > 1) {
+                                itemRow.remove();
+                            } else {
+                                inputEl.value = ''; // 1개 남았을 때는 내용만 지움
+                            }
+                        });
+
+                        itemRow.appendChild(inputEl);
+                        itemRow.appendChild(removeBtn);
+                        listContainer.appendChild(itemRow);
+                    }
+
+                    // 기본 최초 1개 필드 강제 생성
+                    addImageInputField();
+
+                    // 추가를 위한 + 버튼 하단 결합
+                    const addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.innerText = '+ 새 이미지 주소 링크 추가';
+                    addBtn.style.cssText = 'background:#f1f5f9; color:#4f46e5; border:1px dashed #cbd5e1; padding:8px; border-radius:12px; font-size:12px; font-weight:bold; cursor:pointer; width:100%; margin-top:6px; text-align:center;';
+                    addBtn.addEventListener('click', function() {
+                        addImageInputField();
+                    });
+                    wrapper.appendChild(addBtn);
+
+                // 관광지 자동완성 파트 
+                } else if (currentTab === 'incentives' && field.id === 'attraction_search') {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = field.id;
+                    //input.placeholder = field.placeholder;
+                    input.style.cssText = 'width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; font-size:14px; outline:none; font-family:inherit;';
+                    if (field.req) input.required = true;
+                    wrapper.appendChild(input);
+
+                    input.selectedAttractions = [];
+
+                    const chipContainer = document.createElement('div');
+                    chipContainer.id = 'attraction-chip-container';
+                    chipContainer.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;';
+                    wrapper.appendChild(chipContainer);
+
+                    const suggestBox = document.createElement('div');
+                    suggestBox.id = 'attraction-suggest-box';
+                    suggestBox.style.cssText = 'position:absolute; left:0; right:0; top:65px; background:white; border:1px solid #cbd5e1; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.05); display:none; z-index:50; max-height:150px; overflow-y:auto;';
+                    wrapper.appendChild(suggestBox);
+
+                    input.addEventListener('input', function() {
+                        const text = this.value.trim();
+                        suggestBox.innerHTML = '';
+                        if(!text) { suggestBox.style.display = 'none'; return; }
+                        
+                        const attractions = JSON.parse(localStorage.getItem('tour_attractions') || '[]');
+                        const filtered = attractions.filter(attr => attr.name && attr.name.includes(text));
+
+                        if(filtered.length === 0) {
+                            suggestBox.innerHTML = '<div style="padding:10px; font-size:12px; color:#94a3b8;">검색된 관광지가 없습니다. 먼저 관광지 탭에 등록해 주세요.</div>';
+                        } else {
+                            filtered.forEach(attr => {
+                                const div = document.createElement('div');
+                                div.style.cssText = 'padding:10px; font-size:13px; cursor:pointer; border-bottom:1px solid #f1f5f9;';
+                                div.innerHTML = '<strong>' + attr.name + '</strong> <span style="font-size:11px; color:#94a3b8;">(ID: ' + attr.id + ')</span>';
+                                
+                                div.addEventListener('click', function() {
+                                    const isDuplicate = input.selectedAttractions.some(item => item.id === attr.id);
+                                    if (isDuplicate) { alert('이미 선택된 관광지입니다.'); input.value = ''; suggestBox.style.display = 'none'; return; }
+                                    input.selectedAttractions.push({ id: attr.id, name: attr.name });
+                                    
+                                    const chip = document.createElement('span');
+                                    chip.style.cssText = 'background:#e0e7ff; color:#4338ca; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;';
+                                    chip.innerHTML = attr.name + ' <span style="cursor:pointer; color:#6366f1;">✕</span>';
+                                    chip.querySelector('span').addEventListener('click', function() {
+                                        input.selectedAttractions = input.selectedAttractions.filter(item => item.id !== attr.id);
+                                        chip.remove();
+                                    });
+                                    chipContainer.appendChild(chip);
+                                    input.value = '';
+                                    suggestBox.style.display = 'none';
+                                });
+                                div.appendChild(div);
+                            });
+                        }
+                        suggestBox.style.display = 'block';
+                    });
+                    document.addEventListener('click', function(e) { if (e.target !== input) suggestBox.style.display = 'none'; });
+
+                // 일반 필드 세팅 분기
+                } else {
+                    let input;
+                    if (field.type === 'textarea') {
+                        input = document.createElement('textarea');
+                        input.rows = 3;
+                    } else {
+                        input = document.createElement('input');
+                        input.type = field.type;
+                    }
+                    input.id = field.id;
+                    input.style.cssText = 'width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; font-size:14px; outline:none; font-family:inherit;';
+                    if (field.req) input.required = true;
+                    wrapper.appendChild(input);
+                }
+
+                if (field.placeholder && field.type !== 'image_list') {
+                    const hint = document.createElement('div');
+                    hint.style.cssText = 'font-size:11px; color:#94a3b8; margin-top:4px; padding-left:4px;';
+                    hint.innerText = '예시: ' + field.placeholder.replace('예:', '').trim();
+                    wrapper.appendChild(hint);
+                }
+
+                container.appendChild(wrapper);
+            });
+        }
+
+        // 4. 서브밋 폼 핸들러 (신규 등록 및 수정 분기)
+        function handleSubmit_v1(e) {
+            e.preventDefault();
+            const form = document.getElementById('dataForm');
+            const editId = form.getAttribute('data-edit-id');
+
+            const payload = {};
+
+            formStructures[currentTab].forEach(field => {
+                // 이미지 리스트일 때는 전용 클래스 노드를 찾아 일괄 수집
+                if (field.type === 'image_list') {
+                    const listContainer = document.getElementById('image-input-list-container');
+                    const inputs = listContainer ? listContainer.querySelectorAll('.image-url-item-input') : [];
+                    payload[field.id] = Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+                    
+                } else {
+                    const el = document.getElementById(field.id);
+                    if (!el) return;
+
+                    if (currentTab === 'incentives' && field.id === 'attraction_search') {
+                        payload['associated_attractions'] = el.selectedAttractions || [];
+                    } else if ((field.id === 'menu' || field.id === 'room_info') && el.value) {
+                        payload[field.id] = el.value.split('\n').filter(l => l.includes(':')).map(l => {
+                            const parts = l.split(':');
+                            return { name: parts[0].trim(), price: parseInt(parts[1].trim()) || 0 };
+                        });
+                    } else if (field.id === 'tags' && el.value) {
+                        payload[field.id] = el.value.split(',').map(v => v.trim()).filter(v => v);
+                    } else if (field.type === 'number') {
+                        payload[field.id] = parseInt(el.value) || 0;
+                    } else {
+                        payload[field.id] = el.value;
+                    }
+                }
+            });
+
+            let localData = JSON.parse(localStorage.getItem('tour_' + currentTab) || '[]');
+
+            // 현재 시각을 ISO 8601 형식 문자열로 생성 (예: 2026-05-28T18:37:00.000Z) //new Date().toISOString();
+            const currentTimestamp = Date.now();
+
+            if (editId) {
+                // [수정 모드] 기존 데이터 인덱스 탐색
+                const itemIndex = localData.findIndex(item => item.id == editId);
+                if (itemIndex !== -1) {
+                    payload.id = parseInt(editId);
+
+                    // 기존의 최초 등록일(created_at)을 그대로 유지
+                    payload.created_at = localData[itemIndex].created_at || currentTimestamp;
+
+                    // 최종 수정일(updated_at)을 현재 시각으로 갱신
+                    payload.updated_at = currentTimestamp;
+
+                    localData[itemIndex] = payload;
+                    alert('기존 정보 데이터가 성공적으로 수정되었습니다.');
+                }
+            } else {
+                // [신규 등록 모드] 고유 식별 번호 발급
+                payload.id = localData.length > 0 ? localData[localData.length - 1].id + 1 : 1;
+
+                // 최초 등록일과 최종 수정일을 현재 시각으로 동일하게 기록
+                payload.created_at = currentTimestamp;
+                payload.updated_at = currentTimestamp;
+
+                localData.push(payload);
+                alert('임시 데이터 저장소에 신규 기록되었습니다!');
+            }
+
+            localStorage.setItem('tour_' + currentTab, JSON.stringify(localData));
+
+            closeForm();
+            loadCurrentTabData();
+        }
+        // 4. 서브밋 폼 핸들러 (저장 클릭 시 화면 잠금 및 주소창 길이 버그 원천 차단 최종본)
+        function handleSubmit(e) {
+            e.preventDefault();
+            
+            // [보안 및 UX 제어] 저장/수정 버튼을 누르는 즉시 화면 전체를 잠그고 마우스를 모래시계 형태로 고정합니다.
+            lockScreen();
+
+            const form = document.getElementById('dataForm');
+            const editId = form.getAttribute('data-edit-id');
+            
+            const payload = {};
+            if (editId) payload.id = parseInt(editId);
+
+            formStructures[currentTab].forEach(field => {
+                if (field.type === 'image_list') {
+                    const listContainer = document.getElementById('image-input-list-container');
+                    const inputs = listContainer ? listContainer.querySelectorAll('.image-url-item-input') : [];
+                    payload[field.id] = Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+                } else {
+                    const el = document.getElementById(field.id);
+                    if (!el) return;
+
+                    // 식당 메뉴 및 객실 텍스트 파싱 처리
+                    if ((field.id === 'menu' || field.id === 'room_info') && el.value) {
+                        payload[field.id] = el.value
+                            .split('\n')
+                            .map(line => line.replace(/\r/g, '').trim())
+                            .filter(line => line !== '') // 빈 줄은 건너뜀
+                            .map(line => {
+                                // 1. 콜론(:)이 있으면 콜론으로 쪼개고, 없으면 공백(스페이스) 기호로 쪼갭니다.
+                                let parts = [];
+                                if (line.includes(':')) {
+                                    parts = line.split(':');
+                                } else {
+                                    parts = line.split(/\s+/); //공백 하나로만
+                                }
+                                
+                                // 2. 쪼개진 배열의 맨 마지막 요소를 가격(Price)으로 취급하고, 나머지를 이름으로 결합합니다.
+                                if (parts.length >= 2) {
+                                    const priceRaw = parts[parts.length - 1].replace(/[^0-9]/g, '');
+                                    
+                                    // 가격을 제외한 앞부분의 단어들을 다시 합쳐서 메뉴 이름으로 확정
+                                    const nameParts = parts.slice(0, parts.length - 1);
+                                    const menuName = nameParts.join(' ').trim();
+                                    
+                                    return {
+                                        name: menuName || '이름없음',
+                                        price: parseInt(priceRaw) || 0
+                                    };
+                                }
+                                
+                                // 3. 만약 공백이나 콜론이 없어 분리에 실패한 경우 (예: "고기3000" 처럼 붙여 쓴 경우)
+                                // 텍스트 끝에 붙은 숫자 알맹이만 정규식으로 강제 분리 시도
+                                const match = line.match(/^(.*?)([0-9,]+)[^0-9]*$/);
+                                if (match) {
+                                    return {
+                                        name: match[1].trim() || '이름없음',
+                                        price: parseInt(match[2].replace(/[^0-9]/g, '')) || 0
+                                    };
+                                }
+                                
+                                return null;
+                            })
+                            .filter(item => item !== null && item.name !== ''); // 잘못 가공된 쓰레기 값 제거
+                    } else if (currentTab === 'incentives' && field.id === 'attraction_search') {
+                        payload['associated_attractions'] = el.selectedAttractions || [];
+                    } else if (field.id === 'tags' && el.value) {
+                        payload[field.id] = el.value.split(',').map(v => v.trim()).filter(v => v);
+                    } else if (field.type === 'number') {
+                        payload[field.id] = parseInt(el.value) || 0;
+                    } else {
+                        payload[field.id] = el.value;
+                    }
+                }
+            });
+
+            // 구글 서버 수신 성공/실패 시의 콜백 락 해제 컨테이너
+            window.onGoogleSheetsSave = function(result) {
+                // 통신이 완전히 끝났으므로 화면 잠금을 풀고 마우스를 정상으로 돌려놓습니다.
+                unlockScreen();
+
+                if (result.success || !result.error) {
+                    alert('데이터 저장이 성공적으로 완료되었습니다.');
+                    closeForm();
+                    loadCurrentTabData();
+                } else {
+                    alert('저장 실패: ' + result.error);
+                }
+                const saveNode = document.getElementById('jsonp-save-node');
+                if (saveNode) { saveNode.remove(); }
+            };
+
+            // [CORS 및 주소 유실 완치] 문자열을 JSON 처리한 뒤, 주소창 오류를 일으키는 줄바꿈(\n) 텍스트 기호를 임시 특수 토큰으로 치환하여 보냅니다.
+            const cleanPayloadString = JSON.stringify(payload).replace(/\n/g, '__NEWLINE__');
+
+            const script = document.createElement('script');
+            script.id = 'jsonp-save-node';
+            script.src = GAS_API_URL + '?action=save&type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD) + '&payload=' + encodeURIComponent(cleanPayloadString) + '&callback=onGoogleSheetsSave';
+            
+            script.onerror = function() {
+                unlockScreen(); // 통신 장애 시 잠금 강제 해제 보호 작동
+                alert('서버 응답 오류로 데이터 저장에 실패했습니다.');
+                script.remove();
+            };
+            
+            document.body.appendChild(script);
+        }
+
+        // 5. 로컬스토리지 뷰어 렌더링 함수(상세 보기 펼치기, 수정/삭제 액션 버튼)
+        function loadCurrentTabData() {
+            const head = document.getElementById('tableHead');
+            const body = document.getElementById('tableBody');
+            
+            lockScreen();
+
+            const oldScript = document.getElementById('jsonp-fetch-node');
+            if (oldScript) {
+                oldScript.remove();
+            }
+
+            // 테이블 헤더 설정 (첫 열 고정 및 나머지 열 비율 분할)
+            if (currentTab === 'restaurants') {
+                head.innerHTML = '<tr><th style="width:60px;">ID</th><th style="width:25%;">식당명 (클릭시 상세)</th><th style="width:35%;">주소</th><th style="width:20%;">대표메뉴</th><th style="width:20%;">태그</th></tr>';
+            } else if (currentTab === 'attractions') {
+                head.innerHTML = '<tr><th style="width:60px;">ID</th><th style="width:25%;">관광지명 (클릭시 상세)</th><th style="width:40%;">주소</th><th style="width:15%;">입장료</th><th style="width:20%;">휴무일</th></tr>';
+            } else if (currentTab === 'accommodations') {
+                head.innerHTML = '<tr><th style="width:60px;">ID</th><th style="width:25%;">숙박시설명 (클릭시 상세)</th><th style="width:35%;">주소</th><th style="width:20%;">객실가격대</th><th style="width:20%;">태그</th></tr>';
+            } else if (currentTab === 'incentives') {
+                head.innerHTML = '<tr><th style="width:60px;">ID</th><th style="width:20%;">지역명 (클릭시 상세)</th><th style="width:20%;">소관부처</th><th style="width:40%;">지급 조건 요약</th><th style="width:20%;">담당자 연락처</th></tr>';
+            }
+            
+            body.innerHTML = '<tr id="loading-row"><td colspan="5" class="empty-state" style="color: #4f46e5;">데이터를 실시간 동기화 중입니다...</td></tr>';
+            
+            // 2. 전역 스코프에 데이터를 전달받을 콜백 수신 함수 바인딩
+            window.onGoogleSheetsLoad = async function(serverData) {
+                // loadCurrentTabData의 콜백 함수 시작 부분에 삽입
+                CURRENT_SHEET_DATA = Array.isArray(serverData) ? serverData : [];
+
+                unlockScreen();
+                
+                const loadingRow = document.getElementById('loading-row');
+                if (loadingRow) {
+                    loadingRow.remove();
+                }
+
+                if (serverData && serverData.error) {
+                    body.innerHTML = '<tr><td colspan="5" class="empty-state" style="color:#f43f5e; font-weight:bold;">접근 제한: ' + serverData.error + '</td></tr>';
+                    return;
+                }
+
+                let data = Array.isArray(serverData) ? serverData : [];
+
+                const localData = JSON.parse(localStorage.getItem('tour_' + currentTab) || '[]');
+                if (data.length === 0 && localData.length > 0) {
+                    body.innerHTML = '<tr><td colspan="5" class="empty-state" style="color: #ea580c;">로컬 데이터를 구글 클라우드로 백업 마이그레이션 중입니다...</td></tr>';
+                    let successFlag = true;
+                    // JSONP 우회 방식을 사용하여 순차적으로 구글 서버에 하나씩 강제 데이터 전송 업로드 진행
+                    for (let item of localData) {
+                        try {
+                            await new Promise((resolve, reject) => {
+                                const tempCallbackName = 'jsonp_migrate_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                                
+                                window[tempCallbackName] = function(res) {
+                                    scriptNode.remove();
+                                    delete window[tempCallbackName];
+                                    resolve(res);
+                                };
+
+                                const scriptNode = document.createElement('script');
+                                scriptNode.src = GAS_API_URL + '?action=save&type=' + currentTab + 
+                                                '&key=' + encodeURIComponent(USER_PASSWORD) + 
+                                                '&payload=' + encodeURIComponent(JSON.stringify(item)) + 
+                                                '&callback=' + tempCallbackName;
+                                
+                                scriptNode.onerror = function() {
+                                    scriptNode.remove();
+                                    delete window[tempCallbackName];
+                                    reject(new Error('네트워크 전송 오류'));
+                                };
+                                
+                                document.body.appendChild(scriptNode);
+                            });
+                        } catch (migrateError) {
+                            console.error('로컬 데이터 클라우드 이전 실패 항목:', item, migrateError);
+                            successFlag = false;
+                        }
+                    }
+                    if (successFlag) {
+                        alert('기존 로컬 데이터들이 구글 스프레드시트 클라우드 데이터베이스에 자동으로 안전하게 업로드 백업되었습니다.');
+                        // 무한 루프 차단을 위해 백업 완료 후 로컬 스토리지를 깔끔하게 비워 안전장치를 확보합니다.
+                        localStorage.removeItem('tour_' + currentTab);
+                    }
+                    
+                    // 마이그레이션이 끝났으므로 구글 시트에서 전체 목록을 다시 최신 로드합니다.
+                    loadCurrentTabData();
+                    return;
+                }
+
+                const keyword = document.getElementById('tableSearchInput') ? document.getElementById('tableSearchInput').value.trim().toLowerCase() : '';
+
+                // 검색 필터 엔진 분기 확장
+                if (keyword) {
+                    data = data.filter(item => {
+                        if (currentTab === 'restaurants' || currentTab === 'accommodations') {
+                            // 식당과 숙박은 데이터 모델 구조가 유사하므로 함께 묶어 처리 가능합니다.
+                            const menuOrRoomStr = currentTab === 'restaurants'
+                                ? (Array.isArray(item.menu) ? item.menu.map(m => m.name).join(' ') : '')
+                                : (Array.isArray(item.room_info) ? item.room_info.map(r => r.name).join(' ') : '');
+                            const tagStr = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+                            return (item.name && item.name.toLowerCase().includes(keyword)) ||
+                                (item.address && item.address.toLowerCase().includes(keyword)) ||
+                                (item.dietary_options && item.dietary_options.toLowerCase().includes(keyword)) ||
+                                (item.closed_days && item.closed_days.toLowerCase().includes(keyword)) ||
+                                (menuOrRoomStr.toLowerCase().includes(keyword)) ||
+                                (tagStr.toLowerCase().includes(keyword));
+                        } else if (currentTab === 'attractions') {
+                            const tagStr = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+                            return (item.name && item.name.toLowerCase().includes(keyword)) ||
+                                (item.address && item.address.toLowerCase().includes(keyword)) ||
+                                (item.closed_days && item.closed_days.toLowerCase().includes(keyword)) ||
+                                (tagStr.toLowerCase().includes(keyword));
+                        } else if (currentTab === 'incentives') {
+                            const assocStr = Array.isArray(item.associated_attractions) ? item.associated_attractions.map(a => a.name).join(' ') : '';
+                            return (item.region_name && item.region_name.toLowerCase().includes(keyword)) ||
+                                (item.department && item.department.toLowerCase().includes(keyword)) ||
+                                (item.conditions && item.conditions.toLowerCase().includes(keyword)) ||
+                                (item.manager_name && item.manager_name.toLowerCase().includes(keyword)) ||
+                                (assocStr.toLowerCase().includes(keyword));
+                        }
+                        return false;
+                    });
+                }
+
+                if (data.length === 0) {
+                    body.innerHTML = '<tr><td colspan="5" class="empty-state">데이터 정보가 없습니다.</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    let rowHtml = '<tr onclick="toggleDetail(' + item.id + ')" style="cursor:pointer;" class="main-row">';
+
+                    if (currentTab === 'restaurants') {
+                        const menuArray = Array.isArray(item.menu) ? item.menu : [];
+                        const firstMenu = menuArray.length > 0 ? menuArray[0].name + '(' + Number(menuArray[0].price).toLocaleString() + '원)' : '-';
+                        const tagStr = Array.isArray(item.tags) ? item.tags.join(', ') : '-';
+                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.name || '-') + '</td><td class="td-trunc" title="' + item.address + '">' + (item.address || '-') + '</td><td>' + firstMenu + '</td><td><span class="tag-badge" title="' + tagStr + '">' + tagStr + '</span></td>';
+                    } else if (currentTab === 'attractions') {
+                        const fee = item.entrance_fee ? parseInt(item.entrance_fee) : 0;
+                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.name || '-') + '</td><td class="td-trunc" title="' + item.address + '">' + (item.address || '-') + '</td><td class="td-fee">' + fee.toLocaleString() + '원</td><td class="td-closed">' + (item.closed_days || '-') + '</td>';
+                    } else if (currentTab === 'accommodations') {
+                        // 숙박 리스트 요약 행 매핑 정의
+                        const minPrice = item.min_price ? Number(item.min_price).toLocaleString() + '원' : '0원';
+                        const maxPrice = item.max_price ? Number(item.max_price).toLocaleString() + '원' : '0원';
+                        const tagStr = Array.isArray(item.tags) ? item.tags.join(', ') : '-';
+                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.name || '-') + '</td><td class="td-trunc" title="' + item.address + '">' + (item.address || '-') + '</td><td>' + minPrice + ' ~ ' + maxPrice + '</td><td><span class="tag-badge" title="' + tagStr + '">' + tagStr + '</span></td>';
+                    } else if (currentTab === 'incentives') {
+                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.region_name || '-') + '</td><td class="td-fee" style="font-size:12px;">' + (item.department || '-') + '</td><td class="td-trunc" title="' + item.conditions + '">' + (item.conditions || '-') + '</td><td style="font-size:12px;">' + (item.manager_name || '-') + '(' + (item.manager_phone || '-') + ')</td>';
+                    }
+                    rowHtml += '</tr>';
+
+                    let detailHtml = '<tr id="detail-' + item.id + '" style="display:none; background-color:#f8fafc;"><td colspan="5" style="padding:20px 20px 0; max-width:100%;">';
+                    detailHtml += '<div class="detail_contents">';
+
+                    if (currentTab === 'restaurants') {
+                        let allMenus = Array.isArray(item.menu) ? item.menu.map(m => m.name + ': ' + Number(m.price).toLocaleString() + '원').join(', ') : '-';
+                        detailHtml += '<div><strong>연락처:</strong> ' + (item.phone || '-') + '</div><div><strong>전체 메뉴 목록:</strong> ' + (allMenus || '-') + '</div><div><strong>특이 식단:</strong> ' + (item.dietary_options || '-') + '</div><div><strong>사후 평가 요약:</strong> ' + (item.review_summary || '-') + '</div><div><strong>이미지:</strong> ' + renderImagePreviews(item.images) + '</div>';
+                    } else if (currentTab === 'attractions') {
+                        detailHtml += '<div><strong>연락처:</strong> ' + (item.phone || '-') + '</div><div><strong>요금 상세 설명:</strong> ' + (item.fee_details || '-') + '</div><div><strong>관광지 이미지:</strong> ' + renderImagePreviews(item.images) + '</div>';
+                    } else if (currentTab === 'accommodations') {
+                        // 숙박용 드롭다운 상세 카드 패널 구성 정의
+                        let allRooms = Array.isArray(item.room_info) ? item.room_info.map(r => r.name + ': ' + Number(r.price).toLocaleString() + '원').join(', ') : '-';
+                        detailHtml += '<div><strong>연락처:</strong> ' + (item.phone || '-') + '</div>' +
+                            '<div><strong>객실별 요금 상세:</strong> ' + (allRooms || '-') + '</div>' +
+                            '<div><strong>휴무일 정보:</strong> ' + (item.closed_days || '-') + '</div>' +
+                            '<div><strong>사후 평가 요약:</strong> ' + (item.review_summary || '-') + '</div>' +
+                            '<div><strong>사진:</strong> ' + renderImagePreviews(item.images) + '</div>';
+                    } else if (currentTab === 'incentives') {
+                        const assocArr = Array.isArray(item.associated_attractions) ? item.associated_attractions : [];
+                        let assocChips = '';
+                        if (assocArr.length === 0) { 
+                            assocChips = '<span style="color:#94a3b8;">지정된 연계 관광지 없음</span>'; 
+                        }
+                        else { 
+                            assocArr.forEach(attr => { 
+                                assocChips += '<span style="background:#e0e7ff; color:#4338ca; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; margin-right:6px; display:inline-block;">' + 
+                                    attr.name + ' (ID: ' + attr.id + ')</span>'; 
+                                }); 
+                            }
+                        detailHtml += '<div><strong>소관 부처 주소:</strong> ' + (item.address || '-') + 
+                            '</div><div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;"><strong>연계 관광지 목록:</strong> ' + assocChips + 
+                            '</div><div><strong>금액 산출 공식:</strong> ' + (item.calc_formula || '-') + 
+                            '</div><div><strong>담당자 이메일:</strong> ' + (item.manager_email || '-') + 
+                            '</div><div><strong>지급 조건 전체 내용:</strong> <p style="white-space:pre-wrap;">' + (item.conditions || '-') + 
+                            '</p></div>';
+                    }
+
+                    detailHtml += '<div style="display:flex; gap:10px; padding-top:12px;">' +
+                        '<button onclick="editItem(' + item.id + ', event)" style="background:#e0e7ff; color:#4338ca; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">정보 수정하기</button>' +
+                        '<button onclick="deleteItem(' + item.id + ', event)" style="background:#ffe4e6; color:#b91c1c; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">데이터 삭제</button>' +
+                        '</div>';
+
+                    const createdAtStr = formatDate(item.created_at);
+                    const updatedAtStr = formatDate(item.updated_at);
+
+                    detailHtml += '<div style="padding-top: 8px; border-top: 1px dotted #e2e8f0; font-size: 11px; color: #94a3b8; display: flex; gap: 16px; justify-content: space-between;">' +
+                                '<span>등록일시: ' + createdAtStr + '</span>' +
+                                '<span>수정일시: ' + updatedAtStr + '</span>' +
+                                '</div>';
+
+                    detailHtml += '</div>';
+
+                    detailHtml += '</td></tr>';
+                    body.innerHTML += rowHtml + detailHtml;
+                });
+                const activeScript = document.getElementById('jsonp-fetch-node');
+                if(activeScript) {
+                    activeScript.remove();
+                }
+            };
+            // 가상 스크립트 엘리먼트를 통한 JSONP 브라우저 우회 요청 작동
+            const script = document.createElement('script');
+            script.id = 'jsonp-fetch-node';
+            script.src = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD) + '&callback=onGoogleSheetsLoad';
+            document.body.appendChild(script); 
+        }
+
+        // 5-1. 클릭 시 상세 내역을 열고 닫는 토글 함수
+        function toggleDetail(id) {
+            const detailRow = document.getElementById('detail-' + id);
+            if (detailRow.style.display === 'none') {
+                detailRow.style.display = 'table-row';
+            } else {
+                detailRow.style.display = 'none';
+            }
+        }
+
+        // 6. 데이터 탭 완전 삭제
+        function clearCurrentData() {
+            if (confirm('현재 탭에 축적된 로컬 가상 데이터를 완전 초기화하시겠습니까?')) {
+                localStorage.removeItem('tour_' + currentTab);
+                loadCurrentTabData();
+            }
+        }
+
+        // 6-2. 특정 데이터 인덱스를 찾아 입력 폼으로 역전송하는 수정 연동 함수
+        function editItem_v1(id, event) {
+            if (event) event.stopPropagation();
+
+            const localData = JSON.parse(localStorage.getItem('tour_' + currentTab) || '[]');
+            const targetItem = localData.find(item => item.id == id);
+            if (!targetItem) return;
+
+            // 1. 상단 입력 폼 영역을 먼저 눈에 보이도록 활성화
+            openForm();
+
+            // editItem 함수 내부의 formStructures 데이터 채우기 루프 구간을 아래 코드로 대체합니다.
+            formStructures[currentTab].forEach(field => {
+                if (field.type === 'image_list') {
+                    const listContainer = document.getElementById('image-input-list-container');
+                    if (listContainer) {
+                        listContainer.innerHTML = ''; // 기본 필드 비우기
+                        const savedImages = Array.isArray(targetItem[field.id]) ? targetItem[field.id] : [];
+                        
+                        if (savedImages.length === 0) {
+                            // 저장된 사진 주소가 없다면 기본 공백 1칸 생성
+                            const inputEl = document.createElement('input'); // 상단 renderFormFields 내부의 구조를 복제 호출 처리하는 형태 구현
+                            // 구조 조립 간소화를 위해 수동 주입
+                            appendInputFieldContainer(listContainer, '', field.placeholder);
+                        } else {
+                            // 저장된 주소 개수만큼 상자를 늘려 역매핑 주입
+                            savedImages.forEach(url => {
+                                appendInputFieldContainer(listContainer, url, field.placeholder);
+                            });
+                        }
+                    }
+                } else {
+                    const el = document.getElementById(field.id);
+                    if (!el) return;
+
+                    if ((field.id === 'menu' || field.id === 'room_info') && Array.isArray(targetItem[field.id])) {
+                        el.value = targetItem[field.id].map(m => m.name + ':' + m.price).join('\n');
+                    } else if (field.id === 'tags' && Array.isArray(targetItem[field.id])) {
+                        el.value = targetItem[field.id].join(', ');
+                    } else {
+                        el.value = targetItem[field.id] || '';
+                    }
+                    
+                    // 인센티브 다중 칩 세팅 구간 유지
+                    if (currentTab === 'incentives' && field.id === 'attraction_search') {
+                        el.selectedAttractions = targetItem['associated_attractions'] || [];
+                        const chipContainer = document.getElementById('attraction-chip-container');
+                        chipContainer.innerHTML = '';
+                        el.selectedAttractions.forEach(attr => {
+                            const chip = document.createElement('span');
+                            chip.style.cssText = 'background:#e0e7ff; color:#4338ca; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;';
+                            chip.innerHTML = attr.name + ' <span style="cursor:pointer; color:#6366f1;">✕</span>';
+                            chip.querySelector('span').addEventListener('click', function() {
+                                el.selectedAttractions = el.selectedAttractions.filter(item => item.id !== attr.id);
+                                chip.remove();
+                            });
+                            chipContainer.appendChild(chip);
+                        });
+                    }
+                }
+            });
+
+            const form = document.getElementById('dataForm');
+            form.setAttribute('data-edit-id', id);
+
+            const submitBtn = form.querySelector('.btn-submit');
+            submitBtn.innerText = '기존 정보 수정 저장하기';
+            submitBtn.style.background = '#ea580c';
+        }
+        // 6-2. 전역 메모리 캐시를 참조하여 상단 입력 폼에 수정 데이터를 매핑하는 함수
+        function editItem_v2(id, event) {
+            if (event) event.stopPropagation(); // 부모 TR의 열기/닫기 토글 이벤트 버블링 차단
+            
+            // 1. 숨겨져 있던 상단 입력 폼 영역 활성화 열기
+            openForm();
+
+            // 2. [로컬스토리지 완전 제외] 전역 메모리 캐시 배열에서 수정 대상 객체 정밀 추적
+            const targetItem = CURRENT_SHEET_DATA.find(item => item.id == id);
+            
+            if (!targetItem) {
+                alert('데이터 동기화 정보를 읽어오지 못했습니다. 목록을 새로고침한 후 다시 시도해 주세요.');
+                closeForm();
+                return;
+            }
+
+            // 3. 현재 활성화된 탭의 규격 서식에 맞춰 인풋 필드에 기존 데이터 주입
+            formStructures[currentTab].forEach(field => {
+                // 동적 이미지 인풋 상자 다중 복원 처리
+                if (field.type === 'image_list') {
+                    const listContainer = document.getElementById('image-input-list-container');
+                    if (listContainer) {
+                        listContainer.innerHTML = ''; // 기본 필드 비우기
+                        const savedImages = Array.isArray(targetItem[field.id]) ? targetItem[field.id] : [];
+                        
+                        if (savedImages.length === 0) {
+                            // 저장된 사진 주소가 없다면 기본 빈 상자 1칸 복원
+                            appendInputFieldContainer(listContainer, '', field.placeholder);
+                        } else {
+                            // 저장된 주소 개수만큼 상자를 자동으로 생성하며 주소 복구
+                            savedImages.forEach(url => {
+                                appendInputFieldContainer(listContainer, url, field.placeholder);
+                            });
+                        }
+                    }
+                } else {
+                    const el = document.getElementById(field.id);
+                    if (!el) return;
+
+                    if ((field.id === 'menu' || field.id === 'room_info') && Array.isArray(targetItem[field.id])) {
+                        el.value = targetItem[field.id].map(m => m.name + ':' + m.price).join('\n');
+                    } else if (field.id === 'tags' && Array.isArray(targetItem[field.id])) {
+                        el.value = targetItem[field.id].join(', ');
+                    } else {
+                        el.value = targetItem[field.id] || '';
+                    }
+                    
+                    // 인센티브 다중 선택 관광지 칩(Tag) 컴포넌트 재생성 복구
+                    if (currentTab === 'incentives' && field.id === 'attraction_search') {
+                        el.selectedAttractions = targetItem['associated_attractions'] || [];
+                        const chipContainer = document.getElementById('attraction-chip-container');
+                        if (chipContainer) {
+                            chipContainer.innerHTML = '';
+                            el.selectedAttractions.forEach(attr => {
+                                const chip = document.createElement('span');
+                                chip.style.cssText = 'background:#e0e7ff; color:#4338ca; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;';
+                                chip.innerHTML = attr.name + ' <span style="cursor:pointer; color:#6366f1;">✕</span>';
+                                chip.querySelector('span').addEventListener('click', function() {
+                                    el.selectedAttractions = el.selectedAttractions.filter(item => item.id !== attr.id);
+                                    chip.remove();
+                                });
+                                chipContainer.appendChild(chip);
+                            });
+                        }
+                    }
+                }
+            });
+
+            // 4. 폼 상태를 수정 모드로 변환 (UI 주황색 경고 버튼 스위칭)
+            const form = document.getElementById('dataForm');
+            form.setAttribute('data-edit-id', id);
+            
+            const submitBtn = form.querySelector('.btn-submit');
+            submitBtn.innerText = '기존 정보 수정 저장하기';
+            submitBtn.style.background = '#ea580c';
+            
+            // 부드럽게 상단 폼으로 화면 스크롤 유도
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        // 6-2. 전역 메모리 캐시를 참조하여 상단 입력 폼에 수정 데이터를 완벽하게 매핑하는 함수 (메뉴 유실 버그 완치본)
+        function editItem(id, event) {
+            if (event) event.stopPropagation(); // 부모 행의 열기/닫기 토글 이벤트 간섭 차단
+            
+            // 1. 숨겨져 있던 상단 입력 폼 영역 활성화 열기
+            openForm();
+
+            // 2. 전역 메모리 캐시 배열에서 수정 대상 객체 정밀 추적
+            const targetItem = CURRENT_SHEET_DATA.find(item => item.id == id);
+            
+            if (!targetItem) {
+                alert('데이터 동기화 정보를 읽어오지 못했습니다. 목록을 새로고침한 후 다시 시도해 주세요.');
+                closeForm();
+                return;
+            }
+
+            // 3. 현재 활성화된 탭의 규격 서식에 맞춰 인풋 필드에 기존 데이터 주입
+            formStructures[currentTab].forEach(field => {
+                // 동적 이미지 인풋 상자 다중 복원 처리
+                if (field.type === 'image_list') {
+                    const listContainer = document.getElementById('image-input-list-container');
+                    if (listContainer) {
+                        listContainer.innerHTML = ''; // 기존 입력 필드 초기화
+                        const savedImages = Array.isArray(targetItem[field.id]) ? targetItem[field.id] : [];
+                        
+                        if (savedImages.length === 0) {
+                            appendInputFieldContainer(listContainer, '', field.placeholder);
+                        } else {
+                            savedImages.forEach(url => {
+                                appendInputFieldContainer(listContainer, url, field.placeholder);
+                            });
+                        }
+                    }
+                } else {
+                    const el = document.getElementById(field.id);
+                    if (!el) return;
+
+                    // [버그 수정 핵심] 수정 모드로 진입할 때 메뉴와 가격 사이에 공백이나 유령 문자가 섞이지 않도록 포맷 고정
+                    if ((field.id === 'menu' || field.id === 'room_info') && Array.isArray(targetItem[field.id])) {
+                        el.value = targetItem[field.id]
+                            .map(m => {
+                                const name = String(m.name || '').trim();
+                                const price = parseInt(m.price) || 0;
+                                return name + ':' + price; // handleSubmit 파서가 가장 좋아하는 표준 규격으로 역주입
+                            })
+                            .join('\n');
+                    } else if (field.id === 'tags' && Array.isArray(targetItem[field.id])) {
+                        el.value = targetItem[field.id].join(', ');
+                    } else {
+                        el.value = targetItem[field.id] || '';
+                    }
+                    
+                    // 인센티브 다중 선택 관광지 칩 컴포넌트 재생성 복구
+                    if (currentTab === 'incentives' && field.id === 'attraction_search') {
+                        el.selectedAttractions = targetItem['associated_attractions'] || [];
+                        const chipContainer = document.getElementById('attraction-chip-container');
+                        if (chipContainer) {
+                            chipContainer.innerHTML = '';
+                            el.selectedAttractions.forEach(attr => {
+                                const chip = document.createElement('span');
+                                chip.style.cssText = 'background:#e0e7ff; color:#4338ca; font-size:12px; font-weight:bold; padding:4px 10px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;';
+                                chip.innerHTML = attr.name + ' <span style="cursor:pointer; color:#6366f1;">✕</span>';
+                                chip.querySelector('span').addEventListener('click', function() {
+                                    el.selectedAttractions = el.selectedAttractions.filter(item => item.id !== attr.id);
+                                    chip.remove();
+                                });
+                                chipContainer.appendChild(chip);
+                            });
+                        }
+                    }
+                }
+            });
+
+            // 4. 폼 상태를 수정 모드로 변환 (UI 주황색 경고 버튼 스위칭)
+            const form = document.getElementById('dataForm');
+            form.setAttribute('data-edit-id', id);
+            
+            const submitBtn = form.querySelector('.btn-submit');
+            submitBtn.innerText = '기존 정보 수정 저장하기';
+            submitBtn.style.background = '#ea580c';
+            
+            // 부드럽게 상단 폼으로 화면 스크롤 유도
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 6-3. 이미지 수정 모드 시 인풋 상자를 동적으로 추가/삭제해 주는 보조 조립 함수
+        function appendInputFieldContainer(container, value, placeholder) {
+            const itemRow = document.createElement('div');
+            itemRow.className = 'image-input-row';
+            itemRow.style.cssText = 'display:flex; gap:8px; align-items:center; margin-bottom:4px;';
+
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.value = value;
+            inputEl.placeholder = placeholder;
+            inputEl.className = 'image-url-item-input';
+            inputEl.style.cssText = 'width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; font-size:14px; outline:none; font-family:inherit;';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.innerText = '삭제';
+            removeBtn.style.cssText = 'background:#ffe4e6; color:#b91c1c; border:none; padding:10px 14px; border-radius:12px; font-size:13px; font-weight:bold; cursor:pointer; white-space:nowrap;';
+            removeBtn.addEventListener('click', function() {
+                if (container.querySelectorAll('.image-input-row').length > 1) {
+                    itemRow.remove();
+                } else {
+                    inputEl.value = '';
+                }
+            });
+
+            itemRow.appendChild(inputEl);
+            itemRow.appendChild(removeBtn);
+            container.appendChild(itemRow);
+        }
+
+        // 복구 가드용 보조 조립 도구 함수 
+        function appendInputFieldContainer_v1(container, value, placeholder) {
+            const itemRow = document.createElement('div');
+            itemRow.className = 'image-input-row';
+            itemRow.style.cssText = 'display:flex; gap:8px; align-items:center;';
+
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.value = value;
+            inputEl.placeholder = placeholder;
+            inputEl.className = 'image-url-item-input';
+            inputEl.style.cssText = 'width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; font-size:14px; outline:none; font-family:inherit;';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.innerText = '삭제';
+            removeBtn.style.cssText = 'background:#ffe4e6; color:#b91c1c; border:none; padding:10px 14px; border-radius:12px; font-size:13px; font-weight:bold; cursor:pointer; white-space:nowrap;';
+            removeBtn.addEventListener('click', function() {
+                if (container.querySelectorAll('.image-input-row').length > 1) {
+                    itemRow.remove();
+                } else {
+                    inputEl.value = '';
+                }
+            });
+
+            itemRow.appendChild(inputEl);
+            itemRow.appendChild(removeBtn);
+            container.appendChild(itemRow);
+        }
+
+        // 6-3. 단일 데이터 행 영구 삭제 처리 함수
+        function deleteItem_v1(id, event) {
+            if (event) event.stopPropagation(); // 이벤트 전파 차단
+
+            if (confirm('해당 데이터(ID: ' + id + ')를 영구 삭제하시겠습니까?')) {
+                let localData = JSON.parse(localStorage.getItem('tour_' + currentTab) || '[]');
+                localData = localData.filter(item => item.id != id);
+                localStorage.setItem('tour_' + currentTab, JSON.stringify(localData));
+
+                loadCurrentTabData();
+            }
+        }
+        // 6-3. 단일 데이터 행을 구글 시트에서 실시간으로 영구 삭제 처리하는 함수
+        function deleteItem(id, event) {
+            if (event) event.stopPropagation(); // 부모 TR의 열기/닫기 토글 이벤트 간섭 차단
+            
+            if (confirm('해당 데이터(ID: ' + id + ')를 구글 스프레드시트에서 영구 삭제하시겠습니까?')) {
+                
+                // 데이터 삭제가 정상 처리되었을 때 구글 서버로부터 응답받을 콜백 핸들러 정의
+                window.onGoogleSheetsDelete = function(result) {
+                    if (result.success) {
+                        alert('구글 클라우드 데이터베이스에서 영구 삭제 완료되었습니다.');
+                        // 리스트 테이블을 최신 시트 데이터로 리프레시 갱신
+                        loadCurrentTabData();
+                    } else {
+                        alert('삭제 실패: ' + result.error);
+                    }
+                    // 작업 완료 후 생성했던 가상 스크립트 노드 즉시 삭제 청소
+                    const deleteNode = document.getElementById('jsonp-delete-node');
+                    if (deleteNode) {
+                        deleteNode.remove();
+                    }
+                };
+
+                // 로컬 파일 보안 제약(CORS)을 우회하기 위해 JSONP 방식으로 스크립트 노드 동적 생성 전송
+                const script = document.createElement('script');
+                script.id = 'jsonp-delete-node';
+                script.src = GAS_API_URL + '?action=delete&type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD) + '&id=' + id + '&callback=onGoogleSheetsDelete';
+                document.body.appendChild(script);
+            }
+        }
+
+        // 7. 검색 및 필터링된 현재 데이터를 엑셀(CSV) 파일로 내보내는 함수
+        function exportToCSV_v1() {
+            let data = JSON.parse(localStorage.getItem('tour_' + currentTab) || '[]');
+            const keyword = document.getElementById('tableSearchInput') ? document.getElementById('tableSearchInput').value.trim().toLowerCase() : '';
+
+            if (keyword) {
+                data = data.filter(item => {
+                    if (currentTab === 'restaurants' || currentTab === 'accommodations') {
+                        const menuOrRoomStr = currentTab === 'restaurants'
+                            ? (Array.isArray(item.menu) ? item.menu.map(m => m.name).join(' ') : '')
+                            : (Array.isArray(item.room_info) ? item.room_info.map(r => r.name).join(' ') : '');
+                        const tagStr = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+                        return (item.name && item.name.toLowerCase().includes(keyword)) ||
+                            (item.address && item.address.toLowerCase().includes(keyword)) ||
+                            (item.dietary_options && item.dietary_options.toLowerCase().includes(keyword)) ||
+                            (item.closed_days && item.closed_days.toLowerCase().includes(keyword)) ||
+                            (menuOrRoomStr.toLowerCase().includes(keyword)) ||
+                            (tagStr.toLowerCase().includes(keyword));
+                    } else if (currentTab === 'attractions') {
+                        const tagStr = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+                        return (item.name && item.name.toLowerCase().includes(keyword)) ||
+                            (item.address && item.address.toLowerCase().includes(keyword)) ||
+                            (item.closed_days && item.closed_days.toLowerCase().includes(keyword)) ||
+                            (tagStr.toLowerCase().includes(keyword));
+                    } else if (currentTab === 'incentives') {
+                        const assocStr = Array.isArray(item.associated_attractions) ? item.associated_attractions.map(a => a.name).join(' ') : '';
+                        return (item.region_name && item.region_name.toLowerCase().includes(keyword)) ||
+                            (item.department && item.department.toLowerCase().includes(keyword)) ||
+                            (item.conditions && item.conditions.toLowerCase().includes(keyword)) ||
+                            (item.manager_name && item.manager_name.toLowerCase().includes(keyword)) ||
+                            (assocStr.toLowerCase().includes(keyword));
+                    }
+                    return false;
+                });
+            }
+
+            if (data.length === 0) {
+                alert('다운로드할 데이터 정보가 없습니다.');
+                return;
+            }
+
+            let csvRows = [];
+            let headers = [];
+
+            if (currentTab === 'restaurants') {
+                headers = ['고유ID', '식당명', '주소', '연락처', '전체메뉴목록', '최저가격', '최고가격', '특이식단', '사후평가요약', '카테고리태그', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const menuStr = Array.isArray(item.menu) ? item.menu.map(m => m.name + ':' + m.price).join(' | ') : '';
+                    const tagStr = Array.isArray(item.tags) ? item.tags.join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + (item.phone || '').replace(/"/g, '""') + '"',
+                        '"' + menuStr.replace(/"/g, '""') + '"',
+                        item.min_price || 0,
+                        item.max_price || 0,
+                        '"' + (item.dietary_options || '').replace(/"/g, '""') + '"',
+                        '"' + (item.review_summary || '').replace(/"/g, '""') + '"',
+                        '"' + tagStr.replace(/"/g, '""') + '"',
+                        '"' + (item.created_at || '') + '"',
+                        '"' + (item.updated_at || '') + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+
+            } else if (currentTab === 'attractions') {
+                headers = ['고유ID', '관광지명', '주소', '연락처', '대표입장료', '요금상세설명', '정기휴무일', '관광태그', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const tagStr = Array.isArray(item.tags) ? item.tags.join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + (item.phone || '').replace(/"/g, '""') + '"',
+                        item.entrance_fee || 0,
+                        '"' + (item.fee_details || '').replace(/"/g, '""') + '"',
+                        '"' + (item.closed_days || '').replace(/"/g, '""') + '"',
+                        '"' + tagStr.replace(/"/g, '""') + '"',
+                        '"' + (item.created_at || '') + '"',
+                        '"' + (item.updated_at || '') + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+
+            } else if (currentTab === 'accommodations') {
+                headers = ['고유ID', '숙박시설명', '주소', '연락처', '객실별요금상세', '주중최저요금', '주말최고요금', '휴무일정보', '사후평가요약', '숙박태그', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const roomStr = Array.isArray(item.room_info) ? item.room_info.map(r => r.name + ':' + r.price).join(' | ') : '';
+                    const tagStr = Array.isArray(item.tags) ? item.tags.join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + (item.phone || '').replace(/"/g, '""') + '"',
+                        '"' + roomStr.replace(/"/g, '""') + '"',
+                        item.min_price || 0,
+                        item.max_price || 0,
+                        '"' + (item.closed_days || '').replace(/"/g, '""') + '"',
+                        '"' + (item.review_summary || '').replace(/"/g, '""') + '"',
+                        '"' + tagStr.replace(/"/g, '""') + '"',
+                        '"' + (item.created_at || '') + '"',
+                        '"' + (item.updated_at || '') + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+
+            } else if (currentTab === 'incentives') {
+                headers = ['고유ID', '지급지역명', '소관부처/부서', '연계관광지목록', '지급기준조건', '금액산출방식', '담당자이름', '담당부서연락처', '담당자이메일', '서류접수주소', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const assocStr = Array.isArray(item.associated_attractions) ? item.associated_attractions.map(a => a.name + '(ID:' + a.id + ')').join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.region_name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.department || '').replace(/"/g, '""') + '"',
+                        '"' + assocStr.replace(/"/g, '""') + '"',
+                        '"' + (item.conditions || '').replace(/"/g, '""') + '"',
+                        '"' + (item.calc_formula || '').replace(/"/g, '""') + '"',
+                        '"' + (item.manager_name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.manager_phone || '').replace(/"/g, '""') + '"',
+                        '"' + (item.manager_email || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + (item.created_at || '') + '"',
+                        '"' + (item.updated_at || '') + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+            }
+
+            const csvContent = csvRows.join('\r\n');
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const today = new Date().toISOString().split('T')[0];
+
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'tour_' + currentTab + '_' + today + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        // 7. 실시간 전역 메모리 캐시 데이터를 분석하여 엑셀(CSV) 파일로 내보내는 함수
+        function exportToCSV() {
+            // [로컬스토리지 완전 제외] 전역 변수에 로드되어 있는 최신 메모리 배열 데이터 참조
+            let data = [...CURRENT_SHEET_DATA];
+            
+            const keyword = document.getElementById('tableSearchInput') ? document.getElementById('tableSearchInput').value.trim().toLowerCase() : '';
+            
+            // 현재 사용자가 검색창에 입력한 검색어와 매칭되는 데이터만 필터링
+            if (keyword) {
+                data = data.filter(item => {
+                    if (currentTab === 'restaurants' || currentTab === 'accommodations') {
+                        const menuOrRoomStr = currentTab === 'restaurants' 
+                            ? (Array.isArray(item.menu) ? item.menu.map(m => m.name).join(' ') : '')
+                            : (Array.isArray(item.room_info) ? item.room_info.map(r => r.name).join(' ') : '');
+                        const tagStr = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+                        return (item.name && item.name.toLowerCase().includes(keyword)) ||
+                            (item.address && item.address.toLowerCase().includes(keyword)) ||
+                            (item.dietary_options && item.dietary_options.toLowerCase().includes(keyword)) ||
+                            (item.closed_days && item.closed_days.toLowerCase().includes(keyword)) ||
+                            (menuOrRoomStr.toLowerCase().includes(keyword)) ||
+                            (tagStr.toLowerCase().includes(keyword));
+                    } else if (currentTab === 'attractions') {
+                        const tagStr = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+                        return (item.name && item.name.toLowerCase().includes(keyword)) ||
+                            (item.address && item.address.toLowerCase().includes(keyword)) ||
+                            (item.closed_days && item.closed_days.toLowerCase().includes(keyword)) ||
+                            (tagStr.toLowerCase().includes(keyword));
+                    } else if (currentTab === 'incentives') {
+                        const assocStr = Array.isArray(item.associated_attractions) ? item.associated_attractions.map(a => a.name).join(' ') : '';
+                        return (item.region_name && item.region_name.toLowerCase().includes(keyword)) ||
+                            (item.department && item.department.toLowerCase().includes(keyword)) ||
+                            (item.conditions && item.conditions.toLowerCase().includes(keyword)) ||
+                            (item.manager_name && item.manager_name.toLowerCase().includes(keyword)) ||
+                            (assocStr.toLowerCase().includes(keyword));
+                    }
+                    return false;
+                });
+            }
+
+            if (data.length === 0) {
+                alert('다운로드할 데이터 정보가 없습니다.');
+                return;
+            }
+
+            let csvRows = [];
+            let headers = [];
+
+            // 탭 유형별 격리 직렬화 로직 가동
+            if (currentTab === 'restaurants') {
+                headers = ['고유ID', '식당명', '주소', '연락처', '전체메뉴목록', '최저가격', '최고가격', '특이식단', '사후평가요약', '카테고리태그', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const menuStr = Array.isArray(item.menu) ? item.menu.map(m => m.name + ':' + m.price).join(' | ') : '';
+                    const tagStr = Array.isArray(item.tags) ? item.tags.join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + (item.phone || '').replace(/"/g, '""') + '"',
+                        '"' + menuStr.replace(/"/g, '""') + '"',
+                        item.min_price || 0,
+                        item.max_price || 0,
+                        '"' + (item.dietary_options || '').replace(/"/g, '""') + '"',
+                        '"' + (item.review_summary || '').replace(/"/g, '""') + '"',
+                        '"' + tagStr.replace(/"/g, '""') + '"',
+                        '"' + formatDate(item.created_at) + '"',
+                        '"' + formatDate(item.updated_at) + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+
+            } else if (currentTab === 'attractions') {
+                headers = ['고유ID', '관광지명', '주소', '연락처', '대표입장료', '요금상세설명', '정기휴무일', '관광태그', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const tagStr = Array.isArray(item.tags) ? item.tags.join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + (item.phone || '').replace(/"/g, '""') + '"',
+                        item.entrance_fee || 0,
+                        '"' + (item.fee_details || '').replace(/"/g, '""') + '"',
+                        '"' + (item.closed_days || '').replace(/"/g, '""') + '"',
+                        '"' + tagStr.replace(/"/g, '""') + '"',
+                        '"' + formatDate(item.created_at) + '"',
+                        '"' + formatDate(item.updated_at) + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+
+            } else if (currentTab === 'accommodations') {
+                headers = ['고유ID', '숙박시설명', '주소', '연락처', '객실별요금상세', '주중최저요금', '주말최고요금', '휴무일정보', '사후평가요약', '숙박태그', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const roomStr = Array.isArray(item.room_info) ? item.room_info.map(r => r.name + ':' + r.price).join(' | ') : '';
+                    const tagStr = Array.isArray(item.tags) ? item.tags.join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + (item.phone || '').replace(/"/g, '""') + '"',
+                        '"' + roomStr.replace(/"/g, '""') + '"',
+                        item.min_price || 0,
+                        item.max_price || 0,
+                        '"' + (item.closed_days || '').replace(/"/g, '""') + '"',
+                        '"' + (item.review_summary || '').replace(/"/g, '""') + '"',
+                        '"' + tagStr.replace(/"/g, '""') + '"',
+                        '"' + formatDate(item.created_at) + '"',
+                        '"' + formatDate(item.updated_at) + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+
+            } else if (currentTab === 'incentives') {
+                headers = ['고유ID', '지급지역명', '소관부처/부서', '연계관광지목록', '지급기준조건', '금액산출방식', '담당자이름', '담당부서연락처', '담당자이메일', '서류접수주소', '최초등록일', '최종수정일'];
+                csvRows.push(headers.join(','));
+
+                data.forEach(item => {
+                    const assocStr = Array.isArray(item.associated_attractions) ? item.associated_attractions.map(a => a.name + '(ID:' + a.id + ')').join(' | ') : '';
+                    const row = [
+                        item.id,
+                        '"' + (item.region_name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.department || '').replace(/"/g, '""') + '"',
+                        '"' + assocStr.replace(/"/g, '""') + '"',
+                        '"' + (item.conditions || '').replace(/"/g, '""') + '"',
+                        '"' + (item.calc_formula || '').replace(/"/g, '""') + '"',
+                        '"' + (item.manager_name || '').replace(/"/g, '""') + '"',
+                        '"' + (item.manager_phone || '').replace(/"/g, '""') + '"',
+                        '"' + (item.manager_email || '').replace(/"/g, '""') + '"',
+                        '"' + (item.address || '').replace(/"/g, '""') + '"',
+                        '"' + formatDate(item.created_at) + '"',
+                        '"' + formatDate(item.updated_at) + '"'
+                    ];
+                    csvRows.push(row.join(','));
+                });
+            }
+
+            const csvContent = csvRows.join('\r\n');
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const today = new Date().toISOString().split('T')[0];
+            
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'tour_' + currentTab + '_' + today + '.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 8-1. 폼 섹션 열기 함수
+        function openForm() {
+            const formSection = document.getElementById('formSection');
+            const overlay = document.getElementById('popup-overlay');
+            formSection.style.display = 'block';
+            overlay.style.display = 'block';
+
+            // 폼이 열릴 때 첫 번째 입력 항목에 포커스
+            if (formStructures[currentTab] && formStructures[currentTab][0]) {
+                const firstInput = document.getElementById(formStructures[currentTab][0].id);
+                if (firstInput) firstInput.focus();
+            }
+        }
+        // 8-2. 폼 섹션 닫기 및 리셋 함수
+        function closeForm() {
+            const formSection = document.getElementById('formSection');
+            const overlay = document.getElementById('popup-overlay');
+            const form = document.getElementById('dataForm');
+
+            formSection.style.display = 'none';
+            overlay.style.display = 'none';
+            form.removeAttribute('data-edit-id');
+
+            // 서브밋 버튼 스타일 원복
+            const submitBtn = form.querySelector('.btn-submit');
+            submitBtn.innerText = '저장';
+            submitBtn.style.background = '#4f46e5';
+
+            form.reset();
+
+            // 인센티브 메모리 배열 초기화
+            const searchEl = document.getElementById('attraction_search');
+            if (searchEl) {
+                searchEl.selectedAttractions = [];
+                const chipContainer = document.getElementById('attraction-chip-container');
+                if (chipContainer) chipContainer.innerHTML = '';
+            }
+        }
+
+        // 0-1. 이미지 URL 배열을 받아 화면에 표시할 HTML 태그를 생성하는 함수
+        function renderImagePreviews(imagesArray) {
+            if (!Array.isArray(imagesArray) || imagesArray.length === 0) {
+                return '<span style="color:#94a3b8;">등록된 이미지가 없습니다.</span>';
+            }
+            
+            let html = '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">';
+            
+            imagesArray.forEach(url => {
+                if (!url) return;
+                // 이미지가 없거나 주소가 깨졌을 때(onerror) 엑박 대신 텍스트 안내로 대체하는 가드 코드 주입
+                html += '<img src="' + url + '" alt="첨부사진" ' +
+                        'style="width:120px; height:120px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0; background:#f1f5f9;" ' +
+                        'onerror="this.style.display=\'none\'; this.insertAdjacentHTML(\'afterend\', \'<div style=\\\'width:120px; height:120px; border-radius:8px; background:#f1f5f9; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#94a3b8; text-align:center; padding:4px;\\\'>이미지 링크 확인 요망</div>\')">';
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        // 0-2. 밀리초 숫자를 "YYYY-MM-DD HH:MM:SS" 형태의 한국 시각으로 변환하는 함수
+        function formatDate(milliseconds) {
+            if (!milliseconds) return '-';
+            
+            // 저장된 밀리초 값을 기반으로 날짜 객체 생성
+            const date = new Date(milliseconds);
+            
+            // 한국 시간대(KST) 수치 추출 변환
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            
+            return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+        }
+        
+        // 0-3. 다른 탭의 클릭을 차단하기 위해 화면 전체에 투명 마스크를 씌우는 함수
+        function lockScreen() {
+            let locker = document.getElementById('screen-locker');
+            if (!locker) {
+                locker = document.createElement('div');
+                locker.id = 'screen-locker';
+                // 화면 전체를 덮는 투명 레이어 생성 (마우스 커서를 모래시계/로딩 형태로 변경)
+                locker.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:transparent; z-index:9999; cursor:wait;';
+                document.body.appendChild(locker);
+            }
+        }
+
+        // 0-4. 데이터 렌더링이 완료된 후 화면 잠금을 해제하는 함수
+        function unlockScreen() {
+            const locker = document.getElementById('screen-locker');
+            if (locker) {
+                locker.remove();
+            }
+        }
+
+        // 초기 시작점
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFormFields();
+            loadCurrentTabData();
+        });
+    </script>
+</body>
