@@ -824,19 +824,19 @@
             });
         }
 
-        // 4. (HTTPS 도메인) 환경 최적화 대용량 파일 전송 수동 서브밋 핸들러
+        // 4. 깃허브 페이지 환경 최적화 대용량 파일 전송 수동 서브밋 핸들러 (통신 오류 완치 최종본)
         function handleSubmit(e) {
             e.preventDefault();
-            lockScreen(); // 화면 전체 마우스 대기 상태 잠금 가동
-
+            lockScreen(); // 저장 버튼 클릭 즉시 화면 전체 잠금 및 모래시계 마우스 가동
+        
             const form = document.getElementById('dataForm');
             const editId = form.getAttribute('data-edit-id');
             
             const fileInputs = document.querySelectorAll('.image-binary-item-input');
             const uploadPromises = [];
             const filePayloads = [];
-
-            // 파일 탐색기에서 잡힌 실물 이미지의 원액을 고속 이진 바이트 스트림(Base64)으로 인코딩 가공 [INDEX]
+        
+            // 파일 탐색기에서 선택된 실물 파일의 원액을 Base64 이진 스트림으로 인코딩 가공
             fileInputs.forEach(input => {
                 if (input.files && input.files[0]) {
                     const file = input.files[0];
@@ -846,7 +846,7 @@
                             filePayloads.push({
                                 name: file.name,
                                 type: file.type,
-                                base64: evt.target.result // Base64 인코딩 원액 매핑 [INDEX]
+                                base64: evt.target.result
                             });
                             resolve();
                         };
@@ -855,25 +855,21 @@
                     uploadPromises.push(promise);
                 }
             });
-
+        
             // 모든 파일의 바이트 추출 처리가 끝날 때까지 대기 유도 후 결합 전송
             Promise.all(uploadPromises).then(() => {
                 const payload = {};
                 if (editId) payload.id = parseInt(editId);
-                
-                // 구글 드라이브 팩토리에 인서트 전송할 원액 바이너리 목록 바인딩
-                if (filePayloads.length > 0) {
-                    payload['raw_files'] = filePayloads;
-                }
-
+                if (filePayloads.length > 0) payload['raw_files'] = filePayloads;
+        
                 formStructures[currentTab].forEach(field => {
                     if (field.type !== 'file_upload') {
                         const el = document.getElementById(field.id);
                         if (!el) return;
-
-                        // 유연 공백 분리 메뉴 및 객실 가격 정보 정제 정규식 규칙 작동
+        
+                        // 유연 공백 분리 메뉴 및 객실 가격 정보 정제 정규식 작동
                         if ((field.id === 'menu' || field.id === 'room_info') && el.value) {
-                            payload[field.id] = el.value.split('\n').map(line => line.replace(/\r/g, '').trim()).filter(line => line !== '').map(line => { let parts = line.includes(':') ? line.split(':') : line.split(/\s+/); if (parts.length >= 2) { const priceRaw = parts[parts.length - 1].replace(/[^0-9]/g, ''); const nameParts = parts.slice(0, parts.length - 1); const menuName = nameParts.join(' ').trim(); return { name: menuName || '이름없음', price: parseInt(priceRaw) || 0 }; } const match = line.match(/^(.*?)([0-9,]+)[^0-9]*$/); if (match) { return { name: match.trim() || '이름없음', price: parseInt(match.replace(/[^0-9]/g, '')) || 0 }; } return null; }).filter(item => item !== null && item.name !== '');
+                            payload[field.id] = el.value.split('\n').map(line => line.replace(/\r/g, '').trim()).filter(line => line !== '').map(line => { let parts = line.includes(':') ? line.split(':') : line.split(/\s+/); if (parts.length >= 2) { const priceRaw = parts[parts.length - 1].replace(/[^0-9]/g, ''); const nameParts = parts.slice(0, parts.length - 1); const menuName = nameParts.join(' ').trim(); return { name: menuName || '이름없음', price: parseInt(priceRaw) || 0 }; } const match = line.match(/^(.*?)([0-9,]+)[^0-9]*$/); if (match) { return { name: match[1].trim() || '이름없음', price: parseInt(match[2].replace(/[^0-9]/g, '')) || 0 }; } return null; }).filter(item => item !== null && item.name !== '');
                         } else if (currentTab === 'incentives' && field.id === 'attraction_search') {
                             payload['associated_attractions'] = el.selectedAttractions || [];
                         } else if (field.id === 'tags' && el.value) {
@@ -885,37 +881,41 @@
                         }
                     }
                 });
-
-                // [보안 우회 종료] 데이터를 주소창에 숨기지 않고, 표준 본문 페이로드 스트림에 안전하게 실어 보냅니다.
-                const requestUrl = GAS_API_URL + '?action=save&type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
-
-                // 깃허브 도메인의 승인권을 바탕으로 구글 doPost 클라우드 엔드포인트에 다이렉트 POST 송신 [INDEX]
+        
+                // 본문(body) 스트림 데이터 전송용 최적화 목적지 URL 주소 설정
+                const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
+        
+                // [버그 수정 완료] 숨김 프레임을 깨우는 편법 대신, 구글 doPost가 돌려주는 표준 JSON 응답 데이터를 다이렉트로 판독합니다.
                 fetch(requestUrl, {
                     method: 'POST',
                     mode: 'cors',
-                    redirect: 'follow',
-                    headers: { 'Content-Type': 'text/plain' }, // 구글 Apps Script 수신 표준 규격 일치
+                    redirect: 'follow', // 구글의 302 리다이렉션을 깃허브 자격증명을 유지한 채 끝까지 추적
+                    headers: { 'Content-Type': 'text/plain' }, // 구글 Apps Script 수신 사양 동기화
                     body: JSON.stringify(payload)
                 })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error('네트워크 HTTP 서버 응답 상태 불량');
+                    return res.json();
+                })
                 .then(result => {
-                    unlockScreen(); // 모래시계 락 해제
+                    unlockScreen(); // 모래시계 락 해제 및 마우스 원복
                     
-                    if (result.success) {
-                        alert('구글 드라이브 내 사진 저장 및 스프레드시트 데이터베이스 적재가 완벽하게 완료되었습니다.');
-                        closeForm();
-                        loadCurrentTabData(); // 리스트 갱신
+                    if (result && result.success) {
+                        alert('구글 클라우드 아카이브 데이터베이스에 데이터 저장이 완벽하게 완료되었습니다.');
+                        closeForm(); // 상단 슬라이드 폼 닫기
+                        loadCurrentTabData(); // 우측 테이블 리스트 실시간 리프레시 갱신
                     } else {
-                        alert('저장 실패: ' + result.error);
+                        alert('저장 실패: ' + (result ? result.error : '알 수 없는 서버 예외 코드'));
                     }
                 })
                 .catch(err => {
-                    unlockScreen();
+                    unlockScreen(); // 장애 시 락 강제 해제 보호
                     alert('구글 클라우드 API 게이트웨이 통신 실패. 비밀번호 확인 또는 구글 앱스 스크립트 재배포 상태를 점검하십시오.');
-                    console.error(err);
+                    console.error('제출 전송 트랜잭션 장애 상세 로그:', err);
                 });
             });
         }
+
 
         // 6-3. 단일 데이터 행을 구글 시트에서 실시간으로 영구 삭제 처리하는 함수 (완전한 JSONP 우회형)
         function deleteItem(id, event) {
