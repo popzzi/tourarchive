@@ -863,7 +863,7 @@
                 if (editId) payload.id = parseInt(editId);
                 
                 if (filePayloads.length > 0) {
-                    payload['images'] = filePayloads;
+                    payload['rawfiles'] = filePayloads;
                 }
         
                 // [3단계] 폼 필드 구조체를 순회하며 텍스트/숫자 데이터 취합
