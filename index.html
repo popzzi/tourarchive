@@ -256,7 +256,8 @@
             width: 100%;
             min-width: 900px;
             /* 모바일 환경 찌그러짐 방지 최소 너비 */
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             text-align: left;
             font-size: 14px;
             table-layout: fixed;
@@ -264,6 +265,17 @@
             overflow-y: auto;
             display: block;
             /* 지정한 너비 비율이 정확히 유지되도록 강제 설정 */
+        }
+        table th:first-child,
+        table td:first-child {
+          position: sticky;
+          left: 0;
+          background-color: #f8f9fa; /* 배경색은 필수 (내용 겹침 방지) */
+          z-index: 2;                /* 일반 셀보다 위에 표시 */
+          border-right: 1px solid #dee2e6;
+        }
+        table thead th:first-child {
+          z-index: 3;
         }
         thead {
             position: sticky;
