@@ -887,6 +887,8 @@
         
             Promise.all(uploadPromises).then(() => {
                 const payload = {};
+                payload.key = USER_PASSWORD;
+                payload.type = currentTab
                 if (editId) payload.id = parseInt(editId);
                 if (filePayloads.length > 0) { payload['rawfiles'] = filePayloads; }
         
