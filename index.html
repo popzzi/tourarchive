@@ -946,19 +946,14 @@
             }
         }
 
-        // 5. 로컬스토리지 뷰어 렌더링 함수(상세 보기 펼치기, 수정/삭제 액션 버튼)
+        // 5. 깃허브 페이지 도메인 환경 최적화 실시간 데이터 조회 및 출력 함수
         function loadCurrentTabData() {
             const head = document.getElementById('tableHead');
             const body = document.getElementById('tableBody');
             
-            lockScreen();
+            lockScreen(); // [1] 화면 잠금
+            body.innerHTML = '<tr id="loading-row">...데이터를 실시간 동기화 중입니다...</td></tr>';
 
-            const oldScript = document.getElementById('jsonp-fetch-node');
-            if (oldScript) {
-                oldScript.remove();
-            }
-
-            // 테이블 헤더 설정 (첫 열 고정 및 나머지 열 비율 분할)
             if (currentTab === 'restaurants') {
                 head.innerHTML = '<tr><th style="width:60px;">ID</th><th style="width:25%;">식당명 (클릭시 상세)</th><th style="width:35%;">주소</th><th style="width:20%;">대표메뉴</th><th style="width:20%;">태그</th></tr>';
             } else if (currentTab === 'attractions') {
@@ -968,73 +963,28 @@
             } else if (currentTab === 'incentives') {
                 head.innerHTML = '<tr><th style="width:60px;">ID</th><th style="width:20%;">지역명 (클릭시 상세)</th><th style="width:20%;">소관부처</th><th style="width:40%;">지급 조건 요약</th><th style="width:20%;">담당자 연락처</th></tr>';
             }
-            
-            body.innerHTML = '<tr id="loading-row"><td colspan="5" class="empty-state" style="color: #4f46e5;">데이터를 실시간 동기화 중입니다...</td></tr>';
-   
-            // 2. 전역 스코프에 데이터를 전달받을 콜백 수신 함수 바인딩
-            window.onGoogleSheetsLoad = async function(serverData) {
-                // loadCurrentTabData의 콜백 함수 시작 부분에 삽입
-                CURRENT_SHEET_DATA = Array.isArray(serverData) ? serverData : [];
 
-                unlockScreen();
-                
+            const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
+
+            // [2] 웹 표준 fetch(GET) 통신 시작
+            fetch(requestUrl, { method: 'GET', mode: 'cors' })
+            .then(res => res.json())
+            .then(serverData => {
+                unlockScreen(); // [3] 데이터 도착 즉시 잠금 해제
+
                 const loadingRow = document.getElementById('loading-row');
-                if (loadingRow) {
-                    loadingRow.remove();
-                }
-
-                if (serverData && serverData.error) {
+                if (loadingRow) { loadingRow.remove(); } // [4] 로딩 행 제거
+                
+                body.innerHTML = '';
+                
+                if (serverData && serverData.error) { 
                     body.innerHTML = '<tr><td colspan="5" class="empty-state" style="color:#f43f5e; font-weight:bold;">접근 제한: ' + serverData.error + '</td></tr>';
                     return;
                 }
 
-                let data = Array.isArray(serverData) ? serverData : [];
-
-                const localData = JSON.parse(localStorage.getItem('tour_' + currentTab) || '[]');
-                if (data.length === 0 && localData.length > 0) {
-                    body.innerHTML = '<tr><td colspan="5" class="empty-state" style="color: #ea580c;">로컬 데이터를 구글 클라우드로 백업 마이그레이션 중입니다...</td></tr>';
-                    let successFlag = true;
-                    // JSONP 우회 방식을 사용하여 순차적으로 구글 서버에 하나씩 강제 데이터 전송 업로드 진행
-                    for (let item of localData) {
-                        try {
-                            await new Promise((resolve, reject) => {
-                                const tempCallbackName = 'jsonp_migrate_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-                                
-                                window[tempCallbackName] = function(res) {
-                                    scriptNode.remove();
-                                    delete window[tempCallbackName];
-                                    resolve(res);
-                                };
-
-                                const scriptNode = document.createElement('script');
-                                scriptNode.src = GAS_API_URL + '?action=save&type=' + currentTab + 
-                                                '&key=' + encodeURIComponent(USER_PASSWORD) + 
-                                                '&payload=' + encodeURIComponent(JSON.stringify(item)) + 
-                                                '&callback=' + tempCallbackName;
-                                
-                                scriptNode.onerror = function() {
-                                    scriptNode.remove();
-                                    delete window[tempCallbackName];
-                                    reject(new Error('네트워크 전송 오류'));
-                                };
-                                
-                                document.body.appendChild(scriptNode);
-                            });
-                        } catch (migrateError) {
-                            console.error('로컬 데이터 클라우드 이전 실패 항목:', item, migrateError);
-                            successFlag = false;
-                        }
-                    }
-                    if (successFlag) {
-                        alert('기존 로컬 데이터들이 구글 스프레드시트 클라우드 데이터베이스에 자동으로 안전하게 업로드 백업되었습니다.');
-                        // 무한 루프 차단을 위해 백업 완료 후 로컬 스토리지를 깔끔하게 비워 안전장치를 확보합니다.
-                        localStorage.removeItem('tour_' + currentTab);
-                    }
-                    
-                    // 마이그레이션이 끝났으므로 구글 시트에서 전체 목록을 다시 최신 로드합니다.
-                    loadCurrentTabData();
-                    return;
-                }
+                // [5] 받아온 최신 데이터를 전역 메모리 캐시 변수에 백업
+                CURRENT_SHEET_DATA = Array.isArray(serverData) ? serverData : [];
+                let data = [...CURRENT_SHEET_DATA];
 
                 const keyword = document.getElementById('tableSearchInput') ? document.getElementById('tableSearchInput').value.trim().toLowerCase() : '';
 
@@ -1162,16 +1112,11 @@
                     detailHtml += '</td></tr>';
                     body.innerHTML += rowHtml + detailHtml;
                 });
-                const activeScript = document.getElementById('jsonp-fetch-node');
-                if(activeScript) {
-                    activeScript.remove();
-                }
-            };
-            // 가상 스크립트 엘리먼트를 통한 JSONP 브라우저 우회 요청 작동
-            const script = document.createElement('script');
-            script.id = 'jsonp-fetch-node';
-            script.src = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD) + '&callback=onGoogleSheetsLoad';
-            document.body.appendChild(script); 
+            })
+            .catch(err => {
+                unlockScreen(); // 통신 장애 시 잠금 강제 해제 보호
+                console.error(err);
+            });
         }
 
         // 5-1. 클릭 시 상세 내역을 열고 닫는 토글 함수
