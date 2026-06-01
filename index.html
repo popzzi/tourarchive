@@ -211,7 +211,7 @@
             width: 100%;
             border: 1px solid #cbd5e1;
             border-radius: 10px;
-            padding: 14px;
+            padding: 12px;
             font-size: 13px;
             outline: none;
             transition: border 0.2s;
@@ -409,8 +409,15 @@
         }
         
         @media (max-width: 767px){
+            header {margin: 0; padding: 15px 23px;}
             header div, .card-title-wrap > div:nth-child(1) {
                 flex-direction: column;
+            }
+            header div {
+                gap: 10px;
+            }
+            .card {
+                padding: 10px;
             }
             #formSection {
                 width: 100%;
