@@ -824,7 +824,7 @@
             });
         }
 
-        // 4. 깃허브 페이지 HTTPS 환경 최적화 - 400 Bad Request 주소 초과 에러를 완치한 대용량 POST 서브밋 핸들러
+        // 4. 깃허브 페이지 HTTPS 환경 최적화 - JSON 파싱 충돌 에러를 완치한 대용량 POST 최종 서브밋 핸들러
         function handleSubmit(e) {
             if (e) {
                 e.preventDefault();
@@ -833,7 +833,7 @@
             
             lockScreen(); // 저장 버튼 클릭 즉시 화면 전체 잠금 및 모래시계 마우스 가동
             console.log("======================================");
-            console.log("🚀 [웹 표준 fetch(POST) 전송 가동] 주소창 400 에러 차단막 돌파 시작");
+            console.log("🚀 [최종 트랜잭션 가동] JSON 파싱 꼬임 현상 완치 시작");
         
             const form = document.getElementById('dataForm');
             const editId = form.getAttribute('data-edit-id');
@@ -852,20 +852,16 @@
                             const canvas = document.createElement('canvas');
                             let width = img.width;
                             let height = img.height;
-                            
-                            const MAX_SIZE = 1200; // 넉넉하고 선명한 해상도 사수
+                            const MAX_SIZE = 1200;
                             if (width > height) {
                                 if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
                             } else {
                                 if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                             }
-                            
                             canvas.width = width;
                             canvas.height = height;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, width, height);
-                            
-                            // 화질 75% 수준으로 고품질 초경량 인코딩 가공
                             const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
                             resolve(compressedBase64);
                         };
@@ -877,7 +873,7 @@
         
             fileInputs.forEach(input => {
                 if (input.files && input.files.length > 0) {
-                    const file = input.files[0]; // 0번째 실물 파일 정밀 획득 추출
+                    const file = input.files[0]; // 0번째 실물 파일 정밀 획득
                     const promise = compressImage(file).then(compressedBase64 => {
                         filePayloads.push({
                             name: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
@@ -889,17 +885,11 @@
                 }
             });
         
-            // 압축 큐 적재가 모두 끝난 후 실행
             Promise.all(uploadPromises).then(() => {
                 const payload = {};
                 if (editId) payload.id = parseInt(editId);
-                
-                // 백엔드 수신 서랍 명칭인 'rawfiles' 주머니 채우기
-                if (filePayloads.length > 0) {
-                    payload['rawfiles'] = filePayloads;
-                }
+                if (filePayloads.length > 0) { payload['rawfiles'] = filePayloads; }
         
-                // 일반 텍스트 및 개행 메뉴판 서식 취합 분기
                 formStructures[currentTab].forEach(field => {
                     if (field.type === 'file_upload') return; 
         
@@ -919,30 +909,31 @@
                     }
                 });
         
-                // 🛠️ [400 에러 완치 핵심] 주소창 뒤에는 타입과 암호만 가볍게 남기고, 대용량 데이터는 body 스트림에 숨겨 전송합니다.
                 const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
         
-                console.log("📡 [구글 클라우드 다이어트 POST 전송 시도]");
                 fetch(requestUrl, {
                     method: 'POST',
-                    mode: 'cors',         // 깃허브 자격 증명 기반 크로스 도메인 활성화
-                    redirect: 'follow',     // 구글 리다이렉션을 브라우저가 끝까지 안전 추적하도록 조율
-                    headers: { 'Content-Type': 'text/plain' }, // 구글 Apps Script doPost 규격 표준 세팅
-                    body: JSON.stringify(payload) // 바디 페이로드 내부에 이미지 텍스트 팩 은닉 은폐
+                    mode: 'cors',         
+                    redirect: 'follow',     
+                    headers: { 'Content-Type': 'text/plain' }, 
+                    body: JSON.stringify(payload) 
                 })
                 .then(res => {
-                    console.log("📡 구글 응답 상태 확인:", res.status);
-                    return res.json(); // 백엔드 createCorsResponse가 반환한 순수 JSON을 정밀 파싱
+                    if (!res.ok) throw new Error('네트워크 HTTP 서버 응답 상태 불량');
+                    // 🛠️ [버그 수정 결정적 열쇠] .json() 대신 .text()로 변경하여 백엔드가 보낸 문자열 원액을 안전하게 확보합니다!
+                    return res.text(); 
                 })
-                .then(result => {
+                .then(textResult => {
                     unlockScreen(); // 모래시계 락 해제 및 마우스 원복
+                    console.log("📥 [구글 백엔드 응답 문자열 분석 결과]:", textResult);
                     
-                    if (result && result.success) {
-                        alert('구글 클라우드 데이터베이스 및 드라이브 폴더에 사진과 데이터 저장이 완벽히 성공했습니다!');
+                    // 백엔드가 던져준 텍스트 토큰 키워드를 정확하게 매칭 대조 검증합니다.
+                    if (textResult.includes("SUCCESS_INSERT") || textResult.includes("SUCCESS_UPDATE")) {
+                        alert('구글 클라우드 데이터베이스 및 드라이브 폴더에 사진과 데이터 저장이 완벽하게 완료되었습니다!');
                         closeForm(); // 상단 입력 슬라이드 폼 닫기
                         loadCurrentTabData(); // 우측 테이블 리스트 최신 리프레시 동기화
                     } else {
-                        alert('저장 실패 피드백 수신: ' + (result ? result.error : '알 수 없는 클라우드 서버 오류'));
+                        alert('저장 처리 도중 서버 내부 오류 발생: ' + textResult);
                     }
                 })
                 .catch(err => {
@@ -954,6 +945,7 @@
         
             return false;
         }
+
 
         // 6-3. 단일 데이터 행을 구글 시트에서 실시간으로 영구 삭제 처리하는 함수 (완전한 JSONP 우회형)
         function deleteItem(id, event) {
