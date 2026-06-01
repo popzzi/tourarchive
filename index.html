@@ -922,10 +922,13 @@
                 // 초경량 다이어트 패킷이므로 구글 가상 제한 장벽(doPost)을 안전하게 원천 관통합니다.
                 fetch(requestUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // CORS 차단 정책 강제 패스 우회
+                    mode: 'cors', // CORS 차단 정책 강제 패스 우회
                     redirect: 'follow',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(payload)
+                })
+                .then(res => {
+                    return res.json();
                 })
                 .then(res => {
                     unlockScreen(); // 모래시계 락 해제
