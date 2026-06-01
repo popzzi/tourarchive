@@ -291,7 +291,9 @@
         th, td {
             padding: 10px;
         }
-
+        tr {
+            min-height: 60px;
+        }
         tr:hover td {
             background-color: #cde2f8;
         }
@@ -406,6 +408,7 @@
             writing-mode: vertical-rl;
             text-orientation: mixed;
             white-space: nowrap;
+            z-index: 50;
         }
         
         @media (max-width: 767px){
