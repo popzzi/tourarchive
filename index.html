@@ -1266,7 +1266,13 @@
         function editItem(id, event) {
             if (event) event.stopPropagation(); // 부모 행의 열기/닫기 토글 이벤트 간섭 차단
 
-            document.getElementById('form-title').innerText = titles[tab] + ' 수정';
+            const titles = {
+                restaurants: '식당',
+                attractions: '관광지',
+                accommodations: '숙박',
+                incentives: '인센티브'
+            };
+            document.getElementById('form-title').innerText = titles[currentTab] + ' 수정';
             // 1. 숨겨져 있던 상단 입력 폼 영역 활성화 열기
             openForm();
 
