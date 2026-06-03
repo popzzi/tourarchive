@@ -452,10 +452,8 @@
         
         @media (max-width: 767px){
             header {margin: 0; padding: 15px 23px;}
-            header div, .card-title-wrap > div:nth-child(1) {
-                flex-direction: column;
-            }
             header div {
+                flex-direction: column;
                 gap: 10px;
             }
             .card {
@@ -479,7 +477,6 @@
         <header>
             <div>
                 <h1>관광 데이터 수집 아카이브</h1>
-                 <!-- 네비게이션 탭 버튼 -->
                 <nav>
                     <button onclick="switchTab('restaurants')" id="tab-restaurants" class="tab-btn active">식당</button>
                     <button onclick="switchTab('attractions')" id="tab-attractions" class="tab-btn">관광지</button>
@@ -536,11 +533,8 @@
                     </div> -->
 
                     <div style="display: flex; gap: 8px; width: 100%;">
-                        <!-- 키 입력 이벤트(oninput)를 전면 제거하여 자동 요청을 차단합니다 -->
-                        <input type="text" id="tableSearchInput" placeholder="검색어를 입력하세요">
-                        
-                        <!-- 클릭 시에만 실물 조회를 실행하는 수동 검색 버튼 -->
-                        <button onclick="loadCurrentTabData()" style="background: #4f46e5; color: white; font-weight: 700; padding: 0 24px; border: none; border-radius: 10px; font-size: 13px; cursor: pointer; white-space: nowrap;">
+                        <input type="text" id="tableSearchInput" placeholder="검색어를 입력하세요">                        
+                        <button onclick="loadCurrentTabData()" style="background: #989c9a; color: white; font-weight: 700; padding: 0 24px; border: none; border-radius: 10px; font-size: 13px; cursor: pointer; white-space: nowrap;">
                             검색
                         </button>
                     </div>
@@ -857,7 +851,6 @@
                         input.type = field.type;
                     }
                     input.id = field.id;
-                    //input.placeholder = field.placeholder; 
                     input.style.cssText = 'width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; font-size:14px; outline:none; font-family:inherit;';
                     if (field.req) input.required = true;
                     wrapper.appendChild(input);
@@ -976,7 +969,6 @@
                 })
                 .then(res => {
                     if (!res.ok) throw new Error('네트워크 HTTP 서버 응답 상태 불량');
-                    // 🛠️ [버그 수정 결정적 열쇠] .json() 대신 .text()로 변경하여 백엔드가 보낸 문자열 원액을 안전하게 확보합니다!
                     return res.text(); 
                 })
                 .then(textResult => {
@@ -1345,38 +1337,6 @@
                             thumbContainer.appendChild(card);
                         });
                     }
-                    // const listContainer = document.getElementById('file-input-list-container');
-                    // if (listContainer) {
-                    //     listContainer.innerHTML = ''; // 기존 입력 필드 초기화
-                        
-                    //     // [참고] 보안상 브라우저는 이전 업로드했던 로컬 파일의 경로(File Object)를 
-                    //     // 스크립트로 강제 복원하는 것을 금지하므로, 수정 모드 진입 시 신규 첨부용 빈 상자 1칸을 깨끗하게 새로 열어줍니다.
-                    //     const itemRow = document.createElement('div');
-                    //     itemRow.className = 'file-input-row';
-                    //     itemRow.style.cssText = 'display:flex; gap:8px; align-items:center;';
-
-                    //     const inputEl = document.createElement('input');
-                    //     inputEl.type = 'file';
-                    //     inputEl.accept = 'image/*';
-                    //     inputEl.className = 'image-binary-item-input';
-                    //     inputEl.style.cssText = 'width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:8px 14px; font-size:13px; outline:none; background:white;';
-
-                    //     const removeBtn = document.createElement('button');
-                    //     removeBtn.type = 'button';
-                    //     removeBtn.innerText = '삭제';
-                    //     removeBtn.style.cssText = 'background:#ffe4e6; color:#b91c1c; border:none; padding:8px 14px; border-radius:12px; font-size:13px; font-weight:bold; cursor:pointer; white-space:nowrap;';
-                    //     removeBtn.addEventListener('click', function() {
-                    //         if (listContainer.querySelectorAll('.file-input-row').length > 1) {
-                    //             itemRow.remove();
-                    //         } else {
-                    //             inputEl.value = '';
-                    //         }
-                    //     });
-
-                    //     itemRow.appendChild(inputEl);
-                    //     itemRow.appendChild(removeBtn);
-                    //     listContainer.appendChild(itemRow);
-                    // }
                 } else {
                     const el = document.getElementById(field.id);
                     if (!el) return;
@@ -1461,7 +1421,6 @@
 
         // 7. 실시간 전역 메모리 캐시 데이터를 분석하여 엑셀(CSV) 파일로 내보내는 함수
         function exportToCSV() {
-            // [로컬스토리지 완전 제외] 전역 변수에 로드되어 있는 최신 메모리 배열 데이터 참조
             let data = [...CURRENT_SHEET_DATA];
             
             const keyword = document.getElementById('tableSearchInput') ? document.getElementById('tableSearchInput').value.trim().toLowerCase() : '';
