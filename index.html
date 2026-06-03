@@ -1293,22 +1293,25 @@
                             
                             delBadge.addEventListener('click', function(e) {
                                 e.stopPropagation();
-                                if (confirm('이 사진을 구글 드라이브 폴더에서 실물 영구 파기하시겠습니까? (복구 불가능)')) {
+                                if (confirm('이미지를 삭제하시겠습니까?')) {
                                     lockScreen();
                                     
-                                    // 백엔드의 delete_drive_file 액션으로 다이렉트 소멸 포격 요청 송신
-                                    const delApiUrl = GAS_API_URL + '?action=delete_drive_file&key=' + encodeURIComponent(USER_PASSWORD) + '&file_url=' + encodeURIComponent(url) + '&callback=onDriveFileDeleted';
+                                    const delApiUrl = GAS_API_URL + '?action=delete_drive_file&type=' + currentTab + '&id=' + id + '&key=' + encodeURIComponent(USER_PASSWORD) + '&file_url=' + encodeURIComponent(url) + '&callback=onDriveFileDeleted';
                                     
                                     window.onDriveFileDeleted = function(res) {
                                         unlockScreen();
                                         if (res && res.success) {
-                                            alert('구글 드라이브 실물 파일 및 링크 정보가 완벽히 삭제되었습니다.');
+                                            alert('이미지가 삭제되었습니다.');
                                             // 프론트엔드 보존 캐시 가방에서 해당 주소 제외 클린업
                                             window.CURRENT_EDIT_KEPT_IMAGES = window.CURRENT_EDIT_KEPT_IMAGES.filter(imgUrl => imgUrl !== url);
-                                            card.remove(); // 화면 카드 폭출 삭제
-                                        } else { alert('드라이브 파일 소멸 실패: ' + res.error); }
+                                            card.remove(); 
+                                            loadCurrentTabData();
+                                        } else { 
+                                            alert('드라이브 파일 소멸 실패: ' + res.error); 
+                                        }
                                         delete window.onDriveFileDeleted;
-                                        const n = document.getElementById('jsonp-del-file-node'); if (n) n.remove();
+                                        const n = document.getElementById('jsonp-del-file-node'); 
+                                        if (n) n.remove();
                                     };
                                     
                                     const script = document.createElement('script');
