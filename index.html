@@ -262,7 +262,7 @@
             font-size: 14px;
             table-layout: fixed;
             height: 100%;
-            overflow-y: auto;
+            /* overflow-y: auto; */
             display: block;
             /* 지정한 너비 비율이 정확히 유지되도록 강제 설정 */
         }
@@ -270,7 +270,9 @@
         table td:first-child {
           position: sticky;
           left: 0;
-          width: 40px;
+          width: 40px !important;
+          min-width: 40px !important;
+          max-width: 40px !important;
           background-color: #f8f9fa; /* 배경색은 필수 (내용 겹침 방지) */
           z-index: 2;  /* 일반 셀보다 위에 표시 */
           border-right: 1px solid #dee2e6;
@@ -279,7 +281,9 @@
         table td:nth-child(2) {
           position: sticky;
           left: 40px; /* 첫 번째 열의 너비만큼 띄워줌 */
-          width: 200px;
+          width: 210px !important;
+          min-width: 210px !important;
+          max-width: 210px !important;
           background: white;
           z-index: 2;
         }
@@ -310,8 +314,9 @@
             vertical-align: middle;
             min-height: 80px;
         }
+        tr { height: 45px }
         th, td {
-            padding: 10px;
+            padding-left: 5px;
         }
         
         tr:hover td {
@@ -907,7 +912,7 @@
                     const file = input.files[0]; // 0번째 실물 파일 정밀 획득
                     const promise = compressImage(file).then(compressedBase64 => {
                         filePayloads.push({
-                            name: fieldName + file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                            name: fieldName + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg",
                             type: "image/jpeg",
                             base64: compressedBase64
                         });
