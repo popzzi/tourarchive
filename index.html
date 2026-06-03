@@ -268,22 +268,22 @@
         }
         table th:first-child,
         table td:first-child {
-            position: sticky;
-            left: 0;
+            /* position: sticky;
+            left: 0; */
             width: 40px !important;
             min-width: 40px !important;
             max-width: 40px !important;
             background-color: #f8f9fa; /* 배경색은 필수 (내용 겹침 방지) */
-            z-index: 2;  /* 일반 셀보다 위에 표시 */
         }
         table th:nth-child(2),
         table td:nth-child(2) {
             position: sticky;
-            left: 40px; /* 첫 번째 열의 너비만큼 띄워줌 */
-            width: 210px !important;
-            min-width: 210px !important;
-            max-width: 210px !important;
-            border-right: 1px solid #dee2e6;
+            left: 0; /* 첫 번째 열의 너비만큼 띄워줌 */
+            width: 150px !important;
+            min-width: 150px !important;
+            max-width: 150px !important;
+            box-shadow: 2px 0px 5px -3px rgba(0, 0, 0, 0.1);
+            /* border-right: 1px solid #dee2e6; */
             z-index: 2;
         }
         table td:nth-child(2) {
