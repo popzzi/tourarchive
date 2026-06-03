@@ -1177,12 +1177,18 @@
 
                     if (currentTab === 'restaurants') {
                         let allMenus = Array.isArray(item.menu) ? item.menu.map(m => m.name + ': ' + Number(m.price).toLocaleString() + '원').join(', ') : '-';
-                        detailHtml += '<div><strong>연락처:</strong> ' + (item.phone || '-') + 
-                            '</div><div><strong>전체 메뉴 목록:</strong> ' + (allMenus || '-') + 
-                            '</div><div><strong>특이 식단:</strong> ' + (item.dietary_options || '-') + 
-                            '</div><div><strong>사후 평가 요약:</strong> ' + (item.review_summary || '-') + 
-                            '<div><strong>기타사항 (메모):</strong> ' + (item.memo || '-') + '</div>' +
-                            '</div><div><strong>이미지:</strong> ' + renderImagePreviews(item.images) + '</div>';
+                        detailHtml += `<div><div><div>연락처</div><div>${item.phone || '-'}</div></div>
+                            <div><div>전체 메뉴 목록</div><div>${allMenus || '-'}</div></div>
+                            <div><div>특이 식단</div><div>${item.dietary_options || '-'}</div></div>
+                            <div><div>사후 평가 요약</div><div>${item.review_summary || '-'}</div></div>
+                            <div><div>기타사항 (메모)</div><div>${item.memo || '-'}</div></div>
+                            <div><div>이미지</div><div>${renderImagePreviews(item.images)}</div></div></div>`;
+                            // '<div><div>연락처:</div><div>' + (item.phone || '-') + 
+                            // '</div></div><div><div>전체 메뉴 목록:</div><div>' + (allMenus || '-') + 
+                            // '</div></div><div><div>특이 식단:</div><div>' + (item.dietary_options || '-') + 
+                            // '</div></div><div><div>사후 평가 요약:</div><div>' + (item.review_summary || '-') + 
+                            // '</div><div><div>기타사항 (메모):</div><div>' + (item.memo || '-') + '</div>' +
+                            // '</div></div><div><div>이미지:</div><div>' + renderImagePreviews(item.images) + '</div>';
                     } else if (currentTab === 'attractions') {
                         detailHtml += '<div><strong>연락처:</strong> ' + (item.phone || '-') + 
                             '</div><div><strong>요금 상세 설명:</strong> ' + (item.fee_details || '-') + 
