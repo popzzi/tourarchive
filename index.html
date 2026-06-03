@@ -954,7 +954,7 @@
                         payload[field.id] = el.value;
                     }
                 });
-                console.log(payload, "**");
+                
                 const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
         
                 fetch(requestUrl, {
@@ -1186,26 +1186,19 @@
                             <div><div class="strong">사후 평가 요약</div><div>${item.review_summary.replace(/\n/g, '<br>') || '-'}</div></div>
                             <div><div class="strong">기타사항 (메모)</div><div>${item.memo.replace(/\n/g, '<br>') || '-'}</div></div>
                             <div><div class="strong">이미지</div><div>${renderImagePreviews(item.images)}</div></div>`;
-                            // '<div><div>연락처:</div><div>' + (item.phone || '-') + 
-                            // '</div></div><div><div>전체 메뉴 목록:</div><div>' + (allMenus || '-') + 
-                            // '</div></div><div><div>특이 식단:</div><div>' + (item.dietary_options || '-') + 
-                            // '</div></div><div><div>사후 평가 요약:</div><div>' + (item.review_summary || '-') + 
-                            // '</div><div><div>기타사항 (메모):</div><div>' + (item.memo || '-') + '</div>' +
-                            // '</div></div><div><div>이미지:</div><div>' + renderImagePreviews(item.images) + '</div>';
                     } else if (currentTab === 'attractions') {
-                        detailHtml += '<div><strong>연락처:</strong> ' + (item.phone || '-') + 
-                            '</div><div><strong>요금 상세 설명:</strong> ' + (item.fee_details || '-') + 
-                            '<div><strong>기타사항 (메모):</strong> ' + (item.memo.replace(/\n/g, '<br>') || '-') + '</div>' +
-                            '</div><div><strong>관광지 이미지:</strong> ' + renderImagePreviews(item.images) + '</div>';
+                        detailHtml += `<div><div class="strong">연락처</div><div>${item.phone || '-'}</div></div>
+                            <div><div class="strong">요금 상세 설명</div><div>${item.fee_details || '-'}</div></div>
+                            <div><div class="strong">기타사항 (메모)</div><div>${item.memo.replace(/\n/g, '<br>') || '-'}</div></div>
+                            <div><div class="strong">관광지 이미지</div><div>${renderImagePreviews(item.images)}</div></div>`;
                     } else if (currentTab === 'accommodations') {
-                        // 숙박용 드롭다운 상세 카드 패널 구성 정의
                         let allRooms = Array.isArray(item.room_info) ? item.room_info.map(r => r.name + ': ' + Number(r.price).toLocaleString() + '원').join(', ') : '-';
-                        detailHtml += '<div><strong>연락처:</strong> ' + (item.phone || '-') + '</div>' +
-                            '<div><strong>객실별 요금 상세:</strong> ' + (allRooms || '-') + '</div>' +
-                            '<div><strong>휴무일 정보:</strong> ' + (item.closed_days || '-') + '</div>' +
-                            '<div><strong>사후 평가 요약:</strong> ' + (item.review_summary || '-') + '</div>' +
-                            '<div><strong>기타사항 (메모):</strong> ' + (item.memo || '-') + '</div>' +
-                            '<div><strong>사진:</strong> ' + renderImagePreviews(item.images) + '</div>';
+                        detailHtml += `<div><div class="strong">연락처</div><div>${item.phone || '-'}</div></div>
+                            <div><div class="strong">객실별 요금 상세</div><div>${allRooms || '-'}</div></div>
+                            <div><div class="strong">휴무일 정보</div><div>${item.closed_days || '-'}</div></div>
+                            <div><div class="strong">사후 평가 요약</div><div>${item.review_summary.replace(/\n/g, '<br>') || '-'}</div></div>
+                            <div><div class="strong">기타사항 (메모)</div><div>${item.memo.replace(/\n/g, '<br>') || '-'}</div></div>
+                            <div><div class="strong">사진</div><div>${renderImagePreviews(item.images)}</div></div>`;
                     } else if (currentTab === 'incentives') {
                         const assocArr = Array.isArray(item.associated_attractions) ? item.associated_attractions : [];
                         let assocChips = '';
@@ -1217,14 +1210,13 @@
                                 assocChips += '<span style="background:#e0e7ff; color:#4338ca; font-size:11px; font-weight:bold; padding:2px 8px; border-radius:4px; margin-right:6px; display:inline-block;">' + 
                                     attr.name + ' (ID: ' + attr.id + ')</span>'; 
                                 }); 
-                            }
-                        detailHtml += '<div><strong>소관 부처 주소:</strong> ' + (item.address || '-') + 
-                            '</div><div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;"><strong>연계 관광지 목록:</strong> ' + assocChips + 
-                            '</div><div><strong>금액 산출 공식:</strong> ' + (item.calc_formula || '-') + 
-                            '</div><div><strong>담당자 이메일:</strong> ' + (item.manager_email || '-') + 
-                            '<div><strong>기타사항 (메모):</strong> ' + (item.memo || '-') + '</div>' +
-                            '</div><div><strong>지급 조건 전체 내용:</strong> <p style="white-space:pre-wrap;">' + (item.conditions || '-') + 
-                            '</p></div>';
+                        }
+                        detailHtml += `<div><div class="strong">소관 부처 주소</div><div>${item.address || '-'}</div></div>
+                            <div><div class="strong" style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">연계 관광지 목록</div><div>${assocChips}</div></div>
+                            <div><div class="strong">금액 산출 공식</div><div>${item.calc_formula || '-'}</div></div>
+                            <div><div class="strong">담당자 이메일</div><div>${item.manager_email || '-'}</div></div>
+                            <div><div class="strong">기타사항 (메모)</div><div>${item.item.memo.replace(/\n/g, '<br>') || '-'}</div></div>
+                            <div><div class="strong">지급 조건 전체 내용</div><div><p style="white-space:pre-wrap;">${item.conditions || '-'}</p></div></div>`;
                     }
 
                     detailHtml += '<div style="display:flex; gap:10px; padding-top:12px;">' +
