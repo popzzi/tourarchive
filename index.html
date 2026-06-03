@@ -520,21 +520,20 @@
             <!-- [하단] 항상 노출되는 데이터 테이블 조회 섹션 -->
             <div class="card" style="min-height: 500px;">
                 <div class="card-title-wrap">
-                    <div>
-                        <h2 id="table-title" class="card-title">식당 리스트</h2>
-
-                        <div style="display: flex; gap: 16px; align-items: center;">
-                            <!-- 신규 입력 폼을 호출하는 + 등록 버튼 -->
-                            <button onclick="openForm()"
-                                style="background: #4f46e5; color: white; font-weight: 700; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">
-                                + 신규
-                            </button>
-                            <button onclick="exportToCSV()"
-                                style="font-size: 12px; color: #16a34a; font-weight: 600; background: none; border: none; cursor: pointer; text-decoration: underline;">
-                                엑셀(CSV) 다운로드
-                            </button>
-                        </div>
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                        <!-- 신규 입력 폼을 호출하는 + 등록 버튼 -->
+                        <button onclick="openForm()"
+                            style="background: #4f46e5; color: white; font-weight: 700; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">
+                            + 신규
+                        </button>
+                        <button onclick="exportToCSV()"
+                            style="font-size: 12px; color: #16a34a; font-weight: 600; background: none; border: none; cursor: pointer; text-decoration: underline;">
+                            엑셀(CSV) 다운로드
+                        </button>
                     </div>
+                    <!-- <div>
+                        <h2 id="table-title" class="card-title">식당 리스트</h2>
+                    </div> -->
 
                     <div style="display: flex; gap: 8px; width: 100%;">
                         <!-- 키 입력 이벤트(oninput)를 전면 제거하여 자동 요청을 차단합니다 -->
@@ -645,7 +644,7 @@
                 incentives: '인센티브'
             };
             document.getElementById('form-title').innerText = titles[tab] + ' 신규';
-            document.getElementById('table-title').innerText = titles[tab] + 'DB';
+            // document.getElementById('table-title').innerText = titles[tab] + 'DB';
 
             const searchInput = document.getElementById('tableSearchInput');
             if (searchInput) searchInput.value = '';
