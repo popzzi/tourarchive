@@ -529,7 +529,7 @@
                 <div class="card-title-wrap">
                     <div style="display: flex; gap: 16px; align-items: center;">
                         <!-- 신규 입력 폼을 호출하는 + 등록 버튼 -->
-                        <button onclick="openForm()"
+                        <button onclick="openForm(true)"
                             style="background: #4f46e5; color: white; font-weight: 700; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">
                             + 신규
                         </button>
@@ -1276,16 +1276,8 @@
         function editItem(id, event) {
             if (event) event.stopPropagation(); // 부모 행의 열기/닫기 토글 이벤트 간섭 차단
 
-            const titles = {
-                restaurants: '식당',
-                attractions: '관광지',
-                accommodations: '숙박',
-                incentives: '인센티브'
-            };
-            
-            document.getElementById('form-title').innerText = titles[currentTab] + ' 수정';
             // 1. 숨겨져 있던 상단 입력 폼 영역 활성화 열기
-            openForm();
+            openForm(false);
 
             // 2. 전역 메모리 캐시 배열에서 수정 대상 객체 정밀 추적
             const targetItem = CURRENT_SHEET_DATA.find(item => item.id == id);
@@ -1593,9 +1585,18 @@
         }
 
         // 8-1. 폼 섹션 열기 함수
-        function openForm() {
-            console.log(CURRENT_SHEET_DATA, 'CURRENT_SHEET_DATA');
-            // document.getElementById('form-title').innerText = titles[currentTab] + ' 수정';
+        function openForm(isNew) {
+            const titles = {
+                restaurants: '식당',
+                attractions: '관광지',
+                accommodations: '숙박',
+                incentives: '인센티브'
+            };
+            if(isNew) {
+                document.getElementById('form-title').innerText = titles[currentTab] + ' 신규정보 등록';
+            } else {
+                document.getElementById('form-title').innerText = titles[currentTab] + ' 수정';
+            }
             
             const formSection = document.getElementById('formSection');
             const overlay = document.getElementById('popup-overlay');
