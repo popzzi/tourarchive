@@ -326,12 +326,16 @@
             background-color: #f5f5f5; /* 다른 글씨와 겹칠 수 있으니 배경색 강조 */
             position: relative;
         }
+        td:hover div {
+            white-space: nowrap;
+            overflow: hidden;
+        }
         tr { height: 45px }
         th, td {
             padding-left: 5px;
         }
         
-        tr:hover td {
+        tr:hover {
             background-color: #cde2f8;
         }
 
