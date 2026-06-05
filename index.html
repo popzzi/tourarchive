@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="address=no, email=no">
     <title>관광 라이브러리 통합 허브</title>
     <style>
@@ -591,7 +591,7 @@
                 { id: 'max_price', label: '최고 금액 (원화, 숫자만)', type: 'number', req: false, placeholder: '15000' },
                 { id: 'dietary_options', label: '특이 식단 태그 설명', type: 'text', req: false, placeholder: '예: 비건 코스 가능, 할랄 인증' },
                 { id: 'tags', label: '카테고리 태그 (쉼표로 구분)', type: 'text', req: false, placeholder: '예: 한식, 가족모임, 가성비' },
-                { id: 'images', label: '사진 URL 등록', type: 'file_upload', req: false, placeholder: '이미지 주소 링크를 입력하세요.' },
+                { id: 'images', label: '사진 URL 등록', type: 'file_upload', req: false, placeholder: '' },
                 { id: 'review_summary', label: '사후 평가 및 리뷰 요약', type: 'textarea', req: false, placeholder: '예: 방문자 만족도 상, 주차가 다소 협소함' },
                 { id: 'memo', label: '기타사항 (메모)', type: 'textarea', req: false, placeholder: '예: 20인 이상 단체 예약 시 사전 조율 필요' }
             ],
@@ -603,7 +603,7 @@
                 { id: 'fee_details', label: '요금 상세 설명', type: 'textarea', req: false, placeholder: '예: 성인 5000원, 청소년 3000원, 65세 이상 무료' },
                 { id: 'closed_days', label: '정기 휴무일', type: 'text', req: false, placeholder: '예: 매주 월요일, 설날 당일 휴무' },
                 { id: 'tags', label: '관광 태그 (쉼표로 구분)', type: 'text', req: false, placeholder: '예: 힐링, 자연, 포토존, 아이와함께' },
-                { id: 'images', label: '사진 URL 등록', type: 'file_upload', req: false, placeholder: '이미지 주소 링크를 입력하세요.' },
+                { id: 'images', label: '사진 URL 등록', type: 'file_upload', req: false, placeholder: '' },
                 { id: 'memo', label: '기타사항 (메모)', type: 'textarea', req: false, placeholder: '예: 반려동물 동반 입장 제한' }
             ],
             accommodations: [
@@ -614,7 +614,7 @@
                 { id: 'min_price', label: '주중 최저 요금 (숫자만)', type: 'number', req: false, placeholder: '80000' },
                 { id: 'max_price', label: '주말 최고 요금 (숫자만)', type: 'number', req: false, placeholder: '250000' },
                 { id: 'tags', label: '숙박 태그 카테고리 (쉼표로 구분)', type: 'text', req: false, placeholder: '예: 호텔, 오션뷰, 수영장, 가족여행' },
-                { id: 'images', label: '사진 URL 등록', type: 'file_upload', req: false, placeholder: '이미지 주소 링크를 입력하세요.' },
+                { id: 'images', label: '사진 URL 등록', type: 'file_upload', req: false, placeholder: '' },
                 { id: 'review_summary', label: '시설 상태 및 사후 평가 요약', type: 'textarea', req: false, placeholder: '예: 리모델링으로 깨끗함, 조식 만족도 높음' },
                 { id: 'memo', label: '기타사항 (메모)', type: 'textarea', req: false, placeholder: '예: 바비큐장 이용 시 추가 비용 발생' }
             ],
