@@ -977,7 +977,7 @@
                     
                     // 백엔드가 던져준 텍스트 토큰 키워드를 정확하게 매칭 대조 검증합니다.
                     if (textResult.includes("SUCCESS_INSERT") || textResult.includes("SUCCESS_UPDATE")) {
-                        alert('구글 클라우드 데이터베이스 및 드라이브 폴더에 사진과 데이터 저장이 완벽하게 완료되었습니다!');
+                        alert('저장되었습니다!');
                         closeForm(); // 상단 입력 슬라이드 폼 닫기
                         loadCurrentTabData(); // 우측 테이블 리스트 최신 리프레시 동기화
                     } else {
@@ -999,13 +999,13 @@
         function deleteItem(id, event) {
             if (event) event.stopPropagation(); // 부모 토글 이벤트 차단
             
-            if (confirm('해당 데이터(ID: ' + id + ')를 구글 스프레드시트에서 영구 삭제하시겠습니까?')) {
+            if (confirm('해당 데이터(ID: ' + id + ')를 영구 삭제하시겠습니까?')) {
                 lockScreen();
 
                 window.onGoogleSheetsDelete = function(result) {
                     unlockScreen();
                     if (result.success) {
-                        alert('구글 클라우드 데이터베이스에서 영구 삭제 완료되었습니다.');
+                        alert('삭제되었습니다.');
                         loadCurrentTabData();
                     } else {
                         alert('삭제 실패: ' + result.error);
