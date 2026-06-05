@@ -225,7 +225,7 @@
             background: white;
             -webkit-overflow-scrolling: touch;
             /* iOS 부드러운 스크롤 */
-            height: auto;
+            height: calc(100% - 110px);
             display: block;
             border-left: 0;
             border-right: 0;
@@ -294,6 +294,7 @@
         thead {
             position: sticky;
             top: 0;
+            z-index: 10;
         }
         tbody {
             overflow: auto;
