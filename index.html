@@ -6,20 +6,8 @@
     <meta name="format-detection" content="address=no, email=no">
     <title>관광 라이브러리 통합 허브</title>
     <style>
-        /* @import url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css'); */
-        @font-face {
-            font-family: 'Paperlogy';
-            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-Regular.woff2') format('woff2');
-            font-weight: 400;
-            font-style: normal;
-        }
+        @import url('https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css');
         
-        @font-face {
-            font-family: 'Paperlogy';
-            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-Bold.woff2') format('woff2');
-            font-weight: 700;
-            font-style: normal;
-        }
         * {
             box-sizing: border-box;
             margin: 0;
@@ -1294,7 +1282,7 @@
                 accommodations: '숙박',
                 incentives: '인센티브'
             };
-            console.log(CURRENT_SHEET_DATA, 'CURRENT_SHEET_DATA');
+            
             document.getElementById('form-title').innerText = titles[currentTab] + ' 수정';
             // 1. 숨겨져 있던 상단 입력 폼 영역 활성화 열기
             openForm();
@@ -1606,6 +1594,9 @@
 
         // 8-1. 폼 섹션 열기 함수
         function openForm() {
+            console.log(CURRENT_SHEET_DATA, 'CURRENT_SHEET_DATA');
+            // document.getElementById('form-title').innerText = titles[currentTab] + ' 수정';
+            
             const formSection = document.getElementById('formSection');
             const overlay = document.getElementById('popup-overlay');
             formSection.style.display = 'block';
