@@ -220,7 +220,7 @@
         /* 테이블 스타일 */
         /* 모바일 화면에서 테이블이 쪼그라들지 않도록 스크롤바 강제 지정 */
         .table-container {
-            overflow: auto hidden;
+            overflow: auto;
             border: 1px solid #f1f5f9;
             background: white;
             -webkit-overflow-scrolling: touch;
@@ -283,11 +283,10 @@
             min-width: 150px !important;
             max-width: 150px !important;
             box-shadow: 2px 0px 5px -3px rgba(0, 0, 0, 0.1);
-            /* border-right: 1px solid #dee2e6; */
-            z-index: 2;
         }
         table td:nth-child(2) {
             background: white;
+            z-index: 2;
         }
         table thead th:first-child {
             z-index: 3;
