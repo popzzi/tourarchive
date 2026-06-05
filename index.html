@@ -1231,7 +1231,7 @@
                             <div><div class="strong">지급 조건 전체 내용</div><div><p style="white-space:pre-wrap;">${item.conditions || '-'}</p></div></div>`;
                     }
 
-                    detailHtml += '<div style="display:flex; gap:10px; padding-top:12px;">' +
+                    detailHtml += '<div style="display:flex; gap:10px; padding-top:12px; justify-content: flex-end;">' +
                         '<button onclick="editItem(' + item.id + ', event)" style="background:#e0e7ff; color:#4338ca; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">수정</button>' +
                         '<button onclick="deleteItem(' + item.id + ', event)" style="background:#ffe4e6; color:#b91c1c; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">삭제</button>' +
                         '</div>';
