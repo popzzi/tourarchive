@@ -488,6 +488,47 @@
             font-weight: bold;
             cursor: pointer;
         }
+        /* 모바일 및 PC 통합 전체 화면 암전 잠금 레이어 */
+        #global-loading-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(15, 23, 42, 0.6); /* 반투명한 네이비 블랙 암전 처리 */
+            backdrop-filter: blur(4px); /* 모바일 환경에서 고급스러운 블러 처리 기법 적용 */
+            z-index: 99999; /* 화면 최상단에 배치하여 모든 터치 조작을 무력화 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            font-family: inherit;
+        }
+
+        /* 모바일 전용 회전 로딩 링 스피너 애니메이션 효과 */
+        .mobile-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3b82f6; /* 포인트 컬러인 블루 링 가동 */
+            border-radius: 50%;
+            animation: spinLoader 0.8s linear infinite;
+        }
+
+        /* 실시간 회전 모션 프레임 정의 */
+        @keyframes spinLoader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 로딩 가이드 텍스트 안내 레이아웃 */
+        .mobile-loading-text {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: -0.5px;
+        }
 
         /* 애니메이션 효과 */
         @keyframes zoomIn {
@@ -509,9 +550,6 @@
                 height: 100%;
                 border-radius: 0;
             }
-            /* .content-container {
-                height: auto;
-            } */
         }
     </style>
 </head>
@@ -573,9 +611,6 @@
                             엑셀(CSV) 다운로드
                         </button>
                     </div>
-                    <!-- <div>
-                        <h2 id="table-title" class="card-title">식당 리스트</h2>
-                    </div> -->
 
                     <div style="display: flex; gap: 8px; width: 100%;">
                         <input type="text" id="tableSearchInput" placeholder="검색어를 입력하세요">                        
@@ -1103,7 +1138,6 @@
    
             // 2. 전역 스코프에 데이터를 전달받을 콜백 수신 함수 바인딩
             window.onGoogleSheetsLoad = async function(serverData) {
-                // loadCurrentTabData의 콜백 함수 시작 부분에 삽입
                 CURRENT_SHEET_DATA = Array.isArray(serverData) ? serverData : [];
 
                 unlockScreen();
@@ -1172,7 +1206,6 @@
                 if (keyword) {
                     data = data.filter(item => {
                         if (currentTab === 'restaurants' || currentTab === 'accommodations') {
-                            // 식당, 숙박: 데이터 모델 구조가 유사하므로 함께 묶어 처리
                             const menuOrRoomStr = currentTab === 'restaurants'
                                 ? (Array.isArray(item.menu) ? item.menu.map(m => m.name).join(' ') : '')
                                 : (Array.isArray(item.room_info) ? item.room_info.map(r => r.name).join(' ') : '');
@@ -1714,23 +1747,41 @@
             return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
         }
         
-        // 0-3. 다른 탭의 클릭을 차단하기 위해 화면 전체에 투명 마스크를 씌우는 함수
+        // [모바일 환경 완전 대응] 클라우드 통신 시작 시 터치 방어벽 및 스피너 가동 함수
         function lockScreen() {
-            let locker = document.getElementById('screen-locker');
-            if (!locker) {
-                locker = document.createElement('div');
-                locker.id = 'screen-locker';
-                // 화면 전체를 덮는 투명 레이어 생성 (마우스 커서를 모래시계/로딩 형태로 변경)
-                locker.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:transparent; z-index:9999; cursor:wait;';
-                document.body.appendChild(locker);
-            }
+            // 1. PC 마우스 커서 모래시계 락 유지 (기존 사양 보존)
+            document.body.style.cursor = 'wait';
+            
+            // 2. 이미 로딩 마스크 레이어가 화면에 존재한다면 중복 생성 방지 처리
+            if (document.getElementById('global-loading-mask')) return;
+
+            // 3. 모바일 터치 조작을 완전히 가로막을 무결성 가상 레이어 노드 생성 [INDEX]
+            const mask = document.createElement('div');
+            mask.id = 'global-loading-mask';
+
+            // 4. 모바일용 실시간 회전 스피너 원과 텍스트 안내 컴포넌트 빌드
+            const spinner = document.createElement('div');
+            spinner.className = 'mobile-loading-spinner';
+
+            const infoText = document.createElement('div');
+            infoText.className = 'mobile-loading-text';
+            infoText.innerText = '클라우드와 실시간 동기화 중입니다...';
+
+            mask.appendChild(spinner);
+            mask.appendChild(infoText);
+            
+            document.body.appendChild(mask);
         }
 
-        // 0-4. 데이터 렌더링이 완료된 후 화면 잠금을 해제하는 함수
+        // [모바일 환경 완전 대응] 구글 서버 처리가 끝나 응답이 오면 마스크를 파기하는 해제 함수
         function unlockScreen() {
-            const locker = document.getElementById('screen-locker');
-            if (locker) {
-                locker.remove();
+            // 1. PC 마우스 포인터 화살표 원복 (기존 사양 보존)
+            document.body.style.cursor = 'default';
+            
+            // 2. 화면을 가로막고 있던 모바일 암전 마스크 노드를 타격하여 영구 추방 제거
+            const mask = document.getElementById('global-loading-mask');
+            if (mask) {
+                mask.remove();
             }
         }
 
