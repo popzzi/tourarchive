@@ -293,6 +293,9 @@
         table td:nth-child(2) {
             background: white;
             z-index: 2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         table thead th:first-child {
             z-index: 3;
@@ -384,7 +387,8 @@
             font-size: 12px;
             background: #f1f5f9;
             color: #475569;
-            padding: 2px 8px;
+            padding: 3px 8px;
+            margin: 3px;
             border-radius: 6px;
             display: inline-block;
             max-width: 130px;
@@ -686,7 +690,7 @@
                 { id: 'name', label: '숙박시설명 *', type: 'text', req: true, placeholder: '예: 경포 해변 리조트' },
                 { id: 'address', label: '주소 *', type: 'text', req: true, placeholder: '예: 강원도 강릉시 해안로 50' },
                 { id: 'phone', label: '연락처', type: 'text', req: false, placeholder: '예: 033-555-6666' },
-                { id: 'room_info', label: '객실 타입 및 요금 정보 (엔터로 한 줄씩 구분, 숫자 천단위 쉼표 제외)', type: 'textarea', req: false, placeholder: '예: 디럭스룸(2인1실): 120000' },
+                { id: 'room_info', label: '객실 타입 및 요금 정보 (엔터로 한 줄씩 구분, 숫자 천단위 쉼표 제외)', type: 'textarea', req: false, placeholder: '예: 디럭스룸(2인1실) 120000' },
                 { id: 'min_price', label: '주중 최저 요금 (숫자만)', type: 'number', req: false, placeholder: '80000' },
                 { id: 'max_price', label: '주말 최고 요금 (숫자만)', type: 'number', req: false, placeholder: '250000' },
                 { id: 'tags', label: '숙박 태그 카테고리 (쉼표로 구분)', type: 'text', req: false, placeholder: '예: 호텔, 오션뷰, 수영장, 가족여행' },
@@ -1239,23 +1243,33 @@
                     return;
                 }
 
+                const tagBlock = function(tags){
+                    let tagStr = ''; 
+                    if(tags.length > 0) {
+                        tags.forEach(function(o){
+                            tagStr += '<span class="tag-badge">' + o + '</span>';
+                        });
+                    } 
+                    return tagStr;
+                }
+
                 data.forEach(item => {
                     let rowHtml = '<tr onclick="toggleDetail(' + item.id + ')" style="cursor:pointer;" class="main-row">';
 
                     if (currentTab === 'restaurants') {
                         const menuArray = Array.isArray(item.menu) ? item.menu : [];
                         const firstMenu = menuArray.length > 0 ? menuArray[0].name + '(' + Number(menuArray[0].price).toLocaleString() + '원)' : '-';
-                        const tagStr = Array.isArray(item.tags) ? item.tags.join(', ') : '-';
-                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.name || '-') + '</td><td class="td-trunc" title="' + item.address + '">' + (item.address || '-') + '</td><td>' + firstMenu + '</td><td><span class="tag-badge" title="' + tagStr + '">' + tagStr + '</span></td>';
+                        const tagStr = tagBlock(item.tags);
+                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;" title="' + item.name + '">' + (item.name || '-') + '</td><td class="td-trunc">' + (item.address || '-') + '</td><td>' + firstMenu + '</td><td>'+ tagStr + '</td>';
                     } else if (currentTab === 'attractions') {
                         const fee = item.entrance_fee ? parseInt(item.entrance_fee) : 0;
-                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.name || '-') + '</td><td class="td-trunc" title="' + item.address + '">' + (item.address || '-') + '</td><td class="td-fee">' + fee.toLocaleString() + '원</td><td class="td-closed">' + (item.closed_days || '-') + '</td>';
+                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;" title="' + item.name + '">' + (item.name || '-') + '</td><td class="td-trunc">' + (item.address || '-') + '</td><td class="td-fee">' + fee.toLocaleString() + '원</td><td class="td-closed">' + (item.closed_days || '-') + '</td>';
                     } else if (currentTab === 'accommodations') {
                         // 숙박 리스트 요약 행 매핑 정의
                         const minPrice = item.min_price ? Number(item.min_price).toLocaleString() + '원' : '0원';
                         const maxPrice = item.max_price ? Number(item.max_price).toLocaleString() + '원' : '0원';
-                        const tagStr = Array.isArray(item.tags) ? item.tags.join(', ') : '-';
-                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.name || '-') + '</td><td class="td-trunc" title="' + item.address + '">' + (item.address || '-') + '</td><td>' + minPrice + ' ~ ' + maxPrice + '</td><td><span class="tag-badge" title="' + tagStr + '">' + tagStr + '</span></td>';
+                        const tagStr = tagBlock(item.tags);
+                        rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;" title="' + item.name + '">' + (item.name || '-') + '</td><td class="td-trunc">' + (item.address || '-') + '</td><td>' + minPrice + ' ~ ' + maxPrice + '</td><td>' + tagStr + '</td>';
                     } else if (currentTab === 'incentives') {
                         rowHtml += '<td class="td-id">' + item.id + '</td><td class="td-bold" style="color:#4f46e5;">' + (item.region_name || '-') + '</td><td class="td-fee" style="font-size:12px;">' + (item.department || '-') + '</td><td class="td-trunc" title="' + item.conditions + '">' + (item.conditions || '-') + '</td><td style="font-size:12px;">' + (item.manager_name || '-') + '(' + (item.manager_phone || '-') + ')</td>';
                     }
@@ -1267,7 +1281,7 @@
                     if (currentTab === 'restaurants') {
                         let allMenus = Array.isArray(item.menu) ? item.menu.map(m => m.name + ': ' + Number(m.price).toLocaleString() + '원').join('<br> ') : '-';
                         detailHtml += `<div><div class="strong">연락처</div><div>${item.phone || '-'}</div></div>
-                            <div><div class="strong">전체 메뉴 목록</div><div>${allMenus || '-'}</div></div>
+                            <div><div class="strong">메뉴 목록</div><div>${allMenus || '-'}</div></div>
                             <div><div class="strong">특이 식단</div><div>${item.dietary_options || '-'}</div></div>
                             <div><div class="strong">사후 평가 요약</div><div>${item.review_summary.replace(/\n/g, '<br>') || '-'}</div></div>
                             <div><div class="strong">기타사항 (메모)</div><div>${item.memo.replace(/\n/g, '<br>') || '-'}</div></div>
