@@ -568,8 +568,8 @@
             <div>
                 <h1>관광 데이터 수집 아카이브</h1>
                 <nav>
-                    <button onclick="switchTab('restaurants')" id="tab-restaurants" class="tab-btn active">식당</button>
                     <button onclick="switchTab('attractions')" id="tab-attractions" class="tab-btn">관광지</button>
+                    <button onclick="switchTab('restaurants')" id="tab-restaurants" class="tab-btn active">식당</button>
                     <button onclick="switchTab('accommodations')" id="tab-accommodations" class="tab-btn">숙박</button>
                     <button onclick="switchTab('incentives')" id="tab-incentives" class="tab-btn">인센티브</button>
                 </nav>
@@ -661,7 +661,7 @@
         let currentTab = 'restaurants';
         // 구글 스프레드시트에서 가져온 데이터를 로컬스토리지 대신 보관할 전역 메모리 캐시 변수
         let CURRENT_SHEET_DATA = [];
-
+        let GLOBAL_ATTRACTIONS_BACKUP = []; 
 
         // 1. 각 탭별 폼 필드 구성 정의
         const formStructures = {
@@ -897,9 +897,12 @@
                     input.addEventListener('input', function() {
                         const text = this.value.trim();
                         suggestBox.innerHTML = '';
-                        if(!text) { suggestBox.style.display = 'none'; return; }
+                        if(!text) { 
+                            suggestBox.style.display = 'none'; 
+                            return; 
+                        }
                         
-                        const attractions = JSON.parse(localStorage.getItem('tour_attractions') || '[]');
+                        const attractions = GLOBAL_ATTRACTIONS_BACKUP || []; 
                         const filtered = attractions.filter(attr => attr.name && attr.name.includes(text));
 
                         if(filtered.length === 0) {
@@ -926,7 +929,7 @@
                                     input.value = '';
                                     suggestBox.style.display = 'none';
                                 });
-                                div.appendChild(div);
+                                suggestBox.appendChild(div);
                             });
                         }
                         suggestBox.style.display = 'block';
@@ -961,14 +964,13 @@
         }
 
         // 4. 깃허브 페이지 HTTPS 환경 최적화 - JSON 파싱 충돌 에러를 완치한 대용량 POST 최종 서브밋 핸들러
-        function handleSubmit(e) {
+        function handleSubmit_v1(e) {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
             
             lockScreen(); // 저장 버튼 클릭 즉시 화면 전체 잠금 및 모래시계 마우스 가동
-            console.log("======================================");
             console.log("🚀 [최종 트랜잭션 가동] JSON 파싱 꼬임 현상 완치 시작");
         
             const form = document.getElementById('dataForm');
@@ -1007,7 +1009,7 @@
                 });
             }
 
-            const fieldName = document.getElementById("name").value;
+            const fieldName = document.getElementById("name").value; //인센티브는 없음
             fileInputs.forEach(input => { // 이미지 추가건이 있을때만?
                 if (input.files && input.files.length > 0) {
                     const file = input.files[0]; // 0번째 실물 파일 정밀 획득
@@ -1056,8 +1058,6 @@
                 fetch(requestUrl, {
                     method: 'POST',
                     mode: 'cors',         
-                    // redirect: 'follow',     
-                    // headers: { 'Content-Type': 'text/plain' }, 
                     body: encodeURIComponent(JSON.stringify(payload)) 
                 })
                 .then(res => {
@@ -1087,6 +1087,138 @@
             return false;
         }
 
+        // 4. 깃허브 페이지 HTTPS 환경 최적화 - 인센티브 유실 에러를 완치한 최종 서브밋 핸들러
+        function handleSubmit(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            lockScreen(); // 모래시계 락 가동
+            console.log("🚀 [최종 트랜잭션 가동] 인센티브 미스매치 현상 완치 시작");
+
+            const form = document.getElementById('dataForm');
+            const editId = form.getAttribute('data-edit-id');
+            
+            const fileInputs = document.querySelectorAll('.image-binary-item-input');
+            const uploadPromises = [];
+            const filePayloads = [];
+
+            // 고해상도 대용량 사진 압축 가상 캔버스 함수
+            function compressImage(file) {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            const MAX_SIZE = 1920;
+                            if (width > height) {
+                                if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                            } else {
+                                if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            const compressedBase64 = canvas.toDataURL('image/png');
+                            resolve(compressedBase64);
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // name 요소를 탐색하되, 인센티브처럼 이름 칸이 없으면 지역명(region_name) 등 대안 텍스트를 자동 확보합니다.
+            const nameInput = document.getElementById("name");
+            const regionInput = document.getElementById("region_name");
+            const fieldName = nameInput ? nameInput.value : (regionInput ? regionInput.value : "incentive");
+
+            // 사진첩 파일 인풋 순회 가드 가동 (인센티브처럼 사진이 없을 때도 튕기지 않고 무결성 통과)
+            fileInputs.forEach(input => {
+                if (input.files && input.files.length > 0) {
+                    const file = input.files[0]; 
+                    const promise = compressImage(file).then(compressedBase64 => {
+                        filePayloads.push({
+                            name: fieldName + "_" + file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                            type: "image/jpeg",
+                            base64: compressedBase64
+                        });
+                    });
+                    uploadPromises.push(promise);
+                }
+            });
+
+            // 압축 및 사진 정제가 100% 끝났거나 첨부 사진이 아예 없을 때도 안전하게 진입을 승인합니다.
+            Promise.all(uploadPromises).then(() => {
+                const payload = {};
+                payload.key = USER_PASSWORD;
+                payload.type = currentTab;
+                
+                if (editId) {
+                    payload.id = parseInt(editId);
+                    payload['images'] = window.CURRENT_EDIT_KEPT_IMAGES || [];
+                }
+                if (filePayloads.length > 0) { payload['rawfiles'] = filePayloads; }
+
+                // [구조 축약] 폼 구조체를 돌며 매칭 필드 정보를 안전하게 추출하는 엔진 작동 구역
+                formStructures[currentTab].forEach(field => {
+                    if (field.type === 'file_upload') return; 
+        
+                    const el = document.getElementById(field.id);
+                    if (!el) return;
+        
+                    if ((field.id === 'menu' || field.id === 'room_info') && el.value) {
+                        payload[field.id] = el.value.split('\n').map(line => line.replace(/\r/g, '').trim()).filter(line => line !== '').map(line => { let parts = line.includes(':') ? line.split(':') : line.split(/\s+/); if (parts.length >= 2) { const priceRaw = parts[parts.length - 1].replace(/[^0-9]/g, ''); const nameParts = parts.slice(0, parts.length - 1); const menuName = nameParts.join(' ').trim(); return { name: menuName || '이름없음', price: parseInt(priceRaw) || 0 }; } const match = line.match(/^(.*?)([0-9,]+)[^0-9]*$/); if (match) { return { name: match.trim() || '이름없음', price: parseInt(match.replace(/[^0-9]/g, '')) || 0 }; } return null; }).filter(item => item !== null && item.name !== '');
+                    } else if (currentTab === 'incentives' && field.id === 'attraction_search') {
+                        const searchComponent = document.getElementById('attraction_search');
+                        payload['associated_attractions'] = searchComponent && searchComponent.selectedAttractions ? searchComponent.selectedAttractions : (el.selectedAttractions || []);
+                    } else if (field.id === 'tags' && el.value) {
+                        payload[field.id] = el.value.split(',').map(v => v.trim()).filter(v => v);
+                    } else if (field.type === 'number') {
+                        payload[field.id] = parseInt(el.value) || 0;
+                    } else {
+                        payload[field.id] = el.value;
+                    }
+                });
+                
+                const requestUrl = GAS_API_URL + '?type=' + currentTab + '&key=' + encodeURIComponent(USER_PASSWORD);
+
+                // 정제 완료된 텍스트 묶음을 바디(Body) 내부 스트림에 안전하게 실어 원격 클라우드로 전송
+                fetch(requestUrl, {
+                    method: 'POST',
+                    mode: 'cors',         
+                    body: encodeURIComponent(JSON.stringify(payload)) 
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('네트워크 HTTP 서버 응답 상태 불량');
+                    return res.text(); 
+                })
+                .then(textResult => {
+                    unlockScreen(); // 모래시계 락 해제
+                    console.log("📥 [구글 백엔드 응답 문자열 분석 결과]:", textResult);
+                    
+                    if (textResult.includes("SUCCESS_INSERT") || textResult.includes("SUCCESS_UPDATE")) {
+                        alert('저장되었습니다!');
+                        closeForm(); // 상단 입력 슬라이드 폼 닫기
+                        loadCurrentTabData(); // 우측 테이블 리스트 실시간 리프레시 동기화
+                    } else {
+                        alert('저장 처리 도중 서버 내부 오류 발생: ' + textResult);
+                    }
+                })
+                .catch(err => {
+                    unlockScreen();
+                    alert('구글 클라우드 통신 처리 장애가 발생했습니다.');
+                    console.error('🚨 POST 전송 최종 예외 로그:', err);
+                });
+            });
+
+            return false;
+        }
 
         // 6-3. 단일 데이터 행을 구글 시트에서 실시간으로 영구 삭제 처리하는 함수 (완전한 JSONP 우회형)
         function deleteItem(id, event) {
@@ -1118,7 +1250,7 @@
             }
         }
 
-        // 5. 깃허브 페이지 도메인 환경 최적화 실시간 데이터 조회 및 출력 함수
+        // 실시간 데이터 조회 및 출력 함수
         function loadCurrentTabData() {
             const head = document.getElementById('tableHead');
             const body = document.getElementById('tableBody');
@@ -1145,8 +1277,7 @@
    
             // 2. 전역 스코프에 데이터를 전달받을 콜백 수신 함수 바인딩
             window.onGoogleSheetsLoad = async function(serverData) {
-                CURRENT_SHEET_DATA = Array.isArray(serverData) ? serverData : [];
-
+                CURRENT_SHEET_DATA = Array.isArray(serverData) ? serverData : []; 
                 unlockScreen();
                 
                 const loadingRow = document.getElementById('loading-row');
@@ -1198,13 +1329,15 @@
                     }
                     if (successFlag) {
                         alert('기존 로컬 데이터들이 구글 스프레드시트 클라우드 데이터베이스에 자동으로 안전하게 업로드 백업되었습니다.');
-                        // 무한 루프 차단을 위해 백업 완료 후 로컬 스토리지를 깔끔하게 비워 안전장치를 확보합니다.
                         localStorage.removeItem('tour_' + currentTab);
                     }
                     
                     // 마이그레이션이 끝났으므로 구글 시트에서 전체 목록을 다시 최신 로드합니다.
                     loadCurrentTabData();
                     return;
+                }
+                if(currentTab === 'attractions') {
+                    GLOBAL_ATTRACTIONS_BACKUP = [...CURRENT_SHEET_DATA]; 
                 }
 
                 const keyword = document.getElementById('tableSearchInput') ? document.getElementById('tableSearchInput').value.trim().toLowerCase() : '';
@@ -1318,7 +1451,7 @@
                             <div><div class="strong" style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">연계 관광지 목록</div><div>${assocChips}</div></div>
                             <div><div class="strong">금액 산출 공식</div><div>${item.calc_formula || '-'}</div></div>
                             <div><div class="strong">담당자 이메일</div><div>${item.manager_email || '-'}</div></div>
-                            <div><div class="strong">기타사항 (메모)</div><div>${item.item.memo.replace(/\n/g, '<br>') || '-'}</div></div>
+                            <div><div class="strong">기타사항 (메모)</div><div>${item.memo.replace(/\n/g, '<br>') || '-'}</div></div>
                             <div><div class="strong">지급 조건 전체 내용</div><div><p style="white-space:pre-wrap;">${item.conditions || '-'}</p></div></div>`;
                     }
 
@@ -1818,8 +1951,18 @@
 
         // 초기 시작점
         document.addEventListener('DOMContentLoaded', () => {
+            // 1. [보안 가드] 시스템 비밀번호가 브라우저 세션에 저장되어 있는지 확인합니다.
+            if (typeof checkSystemPassword === 'function') {
+                checkSystemPassword(); 
+            }
+            
+            if (typeof switchTab === 'function') {
+                switchTab('attractions'); 
+            }
+
             renderFormFields();
             loadCurrentTabData();
         });
+
     </script>
 </body>
